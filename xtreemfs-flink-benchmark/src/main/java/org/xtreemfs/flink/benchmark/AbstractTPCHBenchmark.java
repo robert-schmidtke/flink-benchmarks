@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -12,9 +14,11 @@ import org.apache.commons.cli.Options;
 public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 
 	private static final String OPTION_TPCH_DBGEN_EXECUTABLE = "tpch-dbgen-executable";
+	private static final String OPTION_TPCH_DBGEN_REGENERATE = "tpch-dbgen-regenerate";
 	private static final String OPTION_TPCH_DBGEN_SCALE = "tpch-dbgen-scale";
 
 	protected File dbgenExecutable;
+	private boolean dbgenRegenerate;
 	private float dbgenScale;
 
 	@Override
@@ -23,6 +27,8 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 
 		options.addOption(new Option(null, OPTION_TPCH_DBGEN_EXECUTABLE, true,
 				"Path to the compiled DBGen."));
+		options.addOption(new Option(null, OPTION_TPCH_DBGEN_REGENERATE, false,
+				"Specify if data should be regenerated if it's already there."));
 		options.addOption(new Option(
 				null,
 				OPTION_TPCH_DBGEN_SCALE,
@@ -41,6 +47,8 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 					.getOptionValue(OPTION_TPCH_DBGEN_SCALE));
 		}
 
+		dbgenRegenerate = cmd.hasOption(OPTION_TPCH_DBGEN_REGENERATE);
+
 		if (!cmd.hasOption(OPTION_TPCH_DBGEN_EXECUTABLE)) {
 			throw new IllegalArgumentException("Missing required argument --"
 					+ OPTION_TPCH_DBGEN_EXECUTABLE);
@@ -54,8 +62,24 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 	}
 
 	protected void dbgen() throws IOException, InterruptedException {
-		Process dbgen = new ProcessBuilder(dbgenExecutable.getAbsolutePath(),
-				"-v", "-f", "-s", Float.toString(dbgenScale)).directory(
+		String customerTblPath = dbgenExecutable.getParentFile().getAbsolutePath();
+		if(!customerTblPath.endsWith(File.separator)) {
+			customerTblPath += File.separator;
+		}
+		customerTblPath += "customer.tbl";
+		
+		if(new File(customerTblPath).exists() && !dbgenRegenerate) {
+			return;
+		}
+		
+		List<String> dbgenCommand = new ArrayList<String>();
+		dbgenCommand.add(dbgenExecutable.getAbsolutePath());
+		dbgenCommand.add("-v");
+		dbgenCommand.add("-f");
+		dbgenCommand.add("-s");
+		dbgenCommand.add(Float.toString(dbgenScale));
+
+		Process dbgen = new ProcessBuilder(dbgenCommand).directory(
 				dbgenExecutable.getParentFile()).start();
 
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(

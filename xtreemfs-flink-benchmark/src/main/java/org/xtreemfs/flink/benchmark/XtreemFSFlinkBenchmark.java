@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -38,7 +38,7 @@ public class XtreemFSFlinkBenchmark {
 				"Name of the benchmark to execute. Valid options:"
 						+ benchmarkNames.toString()));
 
-		parser = new GnuParser();
+		parser = new DefaultParser();
 		formatter = new HelpFormatter();
 	}
 
@@ -91,7 +91,8 @@ public class XtreemFSFlinkBenchmark {
 			benchmark.printUsage();
 			System.exit(1);
 		} catch(Throwable t) {
-			System.err.println("Error: " + t.getMessage() + ".");
+			System.err.println("Error: " + t.getMessage() + ".\n");
+			benchmark.printUsage();
 			System.exit(1);
 		}
 	}
