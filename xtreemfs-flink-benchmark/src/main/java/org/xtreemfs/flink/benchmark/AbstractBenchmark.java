@@ -37,6 +37,9 @@ public abstract class AbstractBenchmark {
 					+ OPTION_DFS_WORKING_DIRECTORY_URI);
 		}
 		dfsWorkingDirectoryUri = cmd.getOptionValue(OPTION_DFS_WORKING_DIRECTORY_URI);
+		if (!dfsWorkingDirectoryUri.endsWith("/")) {
+			dfsWorkingDirectoryUri += "/";
+		}
 		
 		try {
 			new URI(dfsWorkingDirectoryUri);
