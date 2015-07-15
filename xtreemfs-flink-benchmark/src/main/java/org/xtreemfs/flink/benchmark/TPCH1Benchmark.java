@@ -3,8 +3,11 @@ package org.xtreemfs.flink.benchmark;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 
+import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
@@ -15,6 +18,7 @@ import org.apache.flink.api.java.operators.SortPartitionOperator;
 import org.apache.flink.api.java.tuple.Tuple10;
 import org.apache.flink.api.java.tuple.Tuple7;
 import org.apache.flink.api.java.tuple.Tuple8;
+import org.apache.flink.util.Collector;
 
 public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
@@ -63,6 +67,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		// l_returnflag,
 		// l_linestatus;
 
+		JobExecutionResult jobExecResult = null;
 		long jobMillis = System.currentTimeMillis();
 		try {
 			ExecutionEnvironment env = ExecutionEnvironment
@@ -130,27 +135,73 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 						}
 					});
 
-			SortPartitionOperator<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> result = mappedLineItems
-					.groupBy(0, 1).sum(2).andSum(3).andSum(4).andSum(5)
-					.andSum(6).andSum(7).sortPartition(0, Order.ASCENDING)
-					.sortPartition(1, Order.ASCENDING);
+			mappedLineItems
+					.groupBy(0, 1)
+					.sortGroup(0, Order.ASCENDING)
+					.sortGroup(1, Order.ASCENDING)
+					.reduceGroup(
+							new GroupReduceFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
 
-			result.map(
-					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
+								private static final long serialVersionUID = -5628953612923330341L;
 
-						private static final long serialVersionUID = -6596407623350163628L;
+								@Override
+								public void reduce(
+										Iterable<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> tuples,
+										Collector<Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>> collector)
+										throws Exception {
+									Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long> result = new Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>(
+											"", "", 0.0f, 0.0f, 0.0f, 0.0f,
+											0.0f, 0.0f, 0.0f, 0L);
+									Iterator<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> it = tuples
+											.iterator();
+									while (it.hasNext()) {
+										Tuple8<String, String, Float, Float, Float, Float, Float, Long> tuple = it
+												.next();
+										result.f0 = tuple.f0;
+										result.f1 = tuple.f1;
+										result.f2 += tuple.f2;
+										result.f3 += tuple.f3;
+										result.f4 += tuple.f4;
+										result.f5 += tuple.f5;
+										result.f6 += tuple.f6;
+										result.f9 += tuple.f7;
+									}
+									result.f8 = result.f6 / result.f9;
+									result.f7 = result.f3 / result.f9;
+									result.f6 = result.f2 / result.f9;
+								}
+							}).print();
 
-						@Override
-						public Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long> map(
-								Tuple8<String, String, Float, Float, Float, Float, Float, Long> tuple)
-								throws Exception {
-							return new Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>(
-									tuple.f0, tuple.f1, tuple.f2, tuple.f3,
-									tuple.f4, tuple.f5, tuple.f2 / tuple.f7,
-									tuple.f3 / tuple.f7, tuple.f6 / tuple.f7,
-									tuple.f7);
-						}
-					}).print();
+			// SortPartitionOperator<Tuple8<String, String, Float, Float, Float,
+			// Float, Float, Long>> result = mappedLineItems
+			// .groupBy(0, 1).sum(2).andSum(3).andSum(4).andSum(5)
+			// .andSum(6).andSum(7).sortPartition(0, Order.ASCENDING)
+			// .sortPartition(1, Order.ASCENDING);
+			//
+			// result.map(
+			// new MapFunction<Tuple8<String, String, Float, Float, Float,
+			// Float, Float, Long>, Tuple10<String, String, Float, Float, Float,
+			// Float, Float, Float, Float, Long>>() {
+			//
+			// private static final long serialVersionUID =
+			// -6596407623350163628L;
+			//
+			// @Override
+			// public Tuple10<String, String, Float, Float, Float, Float, Float,
+			// Float, Float, Long> map(
+			// Tuple8<String, String, Float, Float, Float, Float, Float, Long>
+			// tuple)
+			// throws Exception {
+			// return new Tuple10<String, String, Float, Float, Float, Float,
+			// Float, Float, Float, Long>(
+			// tuple.f0, tuple.f1, tuple.f2, tuple.f3,
+			// tuple.f4, tuple.f5, tuple.f2 / tuple.f7,
+			// tuple.f3 / tuple.f7, tuple.f6 / tuple.f7,
+			// tuple.f7);
+			// }
+			// }).print();
+
+			jobExecResult = env.getLastJobExecutionResult();
 
 			// env.execute("TPC-H Query 1");
 		} catch (Exception e) {
@@ -166,8 +217,9 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		deleteFilesMillis = System.currentTimeMillis() - deleteFilesMillis;
 
 		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
-				+ copyFilesMillis + "ms, job: " + jobMillis
-				+ "ms, deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
+				+ copyFilesMillis + "ms, job (wall): " + jobMillis
+				+ "ms, job (flink): " + jobExecResult.getNetRuntime()
+				+ "ms deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
 				+ fileSizes);
 	}
 
