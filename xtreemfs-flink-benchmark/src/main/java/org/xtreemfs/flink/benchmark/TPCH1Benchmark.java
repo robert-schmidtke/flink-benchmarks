@@ -144,8 +144,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 								throws Exception {
 							return new Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>(
 									tuple.f0, tuple.f1, tuple.f2, tuple.f3,
-									tuple.f4, tuple.f5, tuple.f6 / tuple.f7,
-									tuple.f2 / tuple.f7, tuple.f3 / tuple.f7,
+									tuple.f4, tuple.f5, tuple.f2 / tuple.f7,
+									tuple.f3 / tuple.f7, tuple.f6 / tuple.f7,
 									tuple.f7);
 						}
 					}).print();
