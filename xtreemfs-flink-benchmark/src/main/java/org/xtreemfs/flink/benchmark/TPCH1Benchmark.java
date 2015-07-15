@@ -30,8 +30,9 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		}
 
 		long copyFilesMillis = System.currentTimeMillis();
+		long fileSizes;
 		try {
-			BenchmarkUtil.copyFiles(dbgenExecutable.getParentFile()
+			fileSizes = BenchmarkUtil.copyFiles(dbgenExecutable.getParentFile()
 					.getAbsolutePath(), dfsWorkingDirectory.getAbsolutePath(),
 					"lineitem.tbl");
 			copyFilesMillis = System.currentTimeMillis() - copyFilesMillis;
@@ -62,6 +63,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		// l_returnflag,
 		// l_linestatus;
 
+		long jobMillis = System.currentTimeMillis();
 		try {
 			ExecutionEnvironment env = ExecutionEnvironment
 					.getExecutionEnvironment();
@@ -156,10 +158,17 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					+ e.getMessage(), e);
 		}
 
+		jobMillis = System.currentTimeMillis() - jobMillis;
+
 		long deleteFilesMillis = System.currentTimeMillis();
 		BenchmarkUtil.deleteFiles(dfsWorkingDirectory.getAbsolutePath(),
 				"lineitem.tbl");
 		deleteFilesMillis = System.currentTimeMillis() - deleteFilesMillis;
+
+		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
+				+ copyFilesMillis + "ms, job: " + jobMillis
+				+ "ms, deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
+				+ fileSizes);
 	}
 
 	@Override

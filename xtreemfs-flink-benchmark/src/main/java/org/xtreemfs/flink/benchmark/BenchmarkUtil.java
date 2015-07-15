@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils;
 
 public class BenchmarkUtil {
 
-	public static void copyFiles(String fromDir, String toDir, String... files)
+	public static long copyFiles(String fromDir, String toDir, String... files)
 			throws IOException {
 		if (!fromDir.endsWith(File.separator)) {
 			fromDir += File.separator;
@@ -17,10 +17,13 @@ public class BenchmarkUtil {
 			toDir += File.separator;
 		}
 
+		long bytesCopied = 0;
 		for (String file : files) {
-			FileUtils
-					.copyFile(new File(fromDir + file), new File(toDir + file));
+			File from = new File(fromDir + file);
+			bytesCopied += from.length();
+			FileUtils.copyFile(from, new File(toDir + file));
 		}
+		return bytesCopied;
 	}
 
 	public static void deleteFiles(String dir, String... files) {
