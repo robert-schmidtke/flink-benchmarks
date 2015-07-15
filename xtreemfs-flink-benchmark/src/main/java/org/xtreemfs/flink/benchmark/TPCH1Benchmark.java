@@ -169,6 +169,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 									result.f8 = result.f6 / result.f9;
 									result.f7 = result.f3 / result.f9;
 									result.f6 = result.f2 / result.f9;
+									collector.collect(result);
 								}
 							}).print();
 
