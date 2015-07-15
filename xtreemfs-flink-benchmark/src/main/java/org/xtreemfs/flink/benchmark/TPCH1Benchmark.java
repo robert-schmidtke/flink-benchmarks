@@ -67,7 +67,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
 			CsvReader reader = env.readCsvFile(dfsWorkingDirectoryUri
 					+ "lineitem.tbl");
-			System.out.println("Reading " + dfsWorkingDirectoryUri + "lineitem.tbl");
+			System.out.println("Reading " + dfsWorkingDirectoryUri
+					+ "lineitem.tbl");
 			reader.fieldDelimiter("|");
 			reader.includeFields(4); // l_quantity, decimal
 			reader.includeFields(5); // l_extendedprice, decimal
