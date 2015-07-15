@@ -65,18 +65,20 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			ExecutionEnvironment env = ExecutionEnvironment
 					.getExecutionEnvironment();
 
-			CsvReader reader = env.readCsvFile(dfsWorkingDirectoryUri
-					+ "lineitem.tbl");
-			System.out.println("Reading " + dfsWorkingDirectoryUri
-					+ "lineitem.tbl");
-			reader.fieldDelimiter("|");
-			reader.includeFields(4); // l_quantity, decimal
-			reader.includeFields(5); // l_extendedprice, decimal
-			reader.includeFields(6); // l_discount, decimal
-			reader.includeFields(7); // l_tax, decimal
-			reader.includeFields(8); // l_returnflag, 1-char string
-			reader.includeFields(9); // l_linestatus, 1-char string
-			reader.includeFields(10); // l_shipdate, date
+			CsvReader reader = env.readCsvFile(
+					dfsWorkingDirectoryUri + "lineitem.tbl")
+					.fieldDelimiter("|");
+
+			// 11111110000 in binary, indicate to skip the first four fields and
+			// include the following seven fields.
+			// 4: l_quantity, decimal
+			// 5: l_extendedprice, decimal
+			// 6: l_discount, decimal
+			// 7: l_tax, decimal
+			// 8: l_returnflag, 1-char string
+			// 9: l_linestatus, 1-char string
+			// 10: l_shipdate, date
+			reader.includeFields(0x7F0);
 
 			final SimpleDateFormat dateParser = new SimpleDateFormat(
 					"yyyy-MM-dd");
@@ -99,7 +101,6 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 						public boolean filter(
 								Tuple7<Float, Float, Float, Float, Byte, Byte, String> tuple)
 								throws Exception {
-							System.out.println("Got tuple " + tuple.toString());
 							Date date = dateParser.parse(tuple.f6);
 							return date.getTime() <= referenceDate - delta;
 						}
