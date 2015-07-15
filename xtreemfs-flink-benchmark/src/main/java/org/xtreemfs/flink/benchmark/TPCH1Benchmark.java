@@ -133,11 +133,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					});
 
 			AggregateOperator<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> result = mappedLineItems
-					.sortPartition(0, Order.ASCENDING)
-					.sortPartition(1, Order.ASCENDING).groupBy(0, 1).sum(2)
-					.andSum(3).andSum(4).andSum(5).andSum(6).andSum(7);
-			// .sortPartition(0, Order.ASCENDING).sortPartition(1,
-			// Order.ASCENDING);
+					.groupBy(0, 1).sum(2).andSum(3).andSum(4).andSum(5)
+					.andSum(6).andSum(7);
 
 			result.map(
 					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
