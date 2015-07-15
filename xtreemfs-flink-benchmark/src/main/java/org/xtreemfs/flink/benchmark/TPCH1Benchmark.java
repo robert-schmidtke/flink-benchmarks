@@ -67,6 +67,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
 			CsvReader reader = env.readCsvFile(dfsWorkingDirectoryUri
 					+ "lineitem.tbl");
+			System.out.println("Reading " + dfsWorkingDirectoryUri + "lineitem.tbl");
 			reader.fieldDelimiter("|");
 			reader.includeFields(4); // l_quantity, decimal
 			reader.includeFields(5); // l_extendedprice, decimal
@@ -97,6 +98,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 						public boolean filter(
 								Tuple7<Float, Float, Float, Float, Byte, Byte, String> tuple)
 								throws Exception {
+							System.out.println("Got tuple " + tuple.toString());
 							Date date = dateParser.parse(tuple.f6);
 							return date.getTime() <= referenceDate - delta;
 						}
