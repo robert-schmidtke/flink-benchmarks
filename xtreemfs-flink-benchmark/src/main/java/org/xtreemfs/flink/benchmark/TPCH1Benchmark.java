@@ -10,13 +10,11 @@ import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
-import org.apache.flink.api.java.operators.AggregateOperator;
 import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.operators.SortPartitionOperator;
-import org.apache.flink.api.java.operators.UnsortedGrouping;
+import org.apache.flink.api.java.tuple.Tuple10;
 import org.apache.flink.api.java.tuple.Tuple7;
 import org.apache.flink.api.java.tuple.Tuple8;
-import org.apache.flink.api.java.tuple.Tuple9;
 
 public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
@@ -136,18 +134,19 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					.sortPartition(1, Order.ASCENDING);
 
 			result.map(
-					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>>() {
+					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
 
 						private static final long serialVersionUID = -6596407623350163628L;
 
 						@Override
-						public Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float> map(
+						public Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long> map(
 								Tuple8<String, String, Float, Float, Float, Float, Float, Long> tuple)
 								throws Exception {
-							return new Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>(
+							return new Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>(
 									tuple.f0, tuple.f1, tuple.f2, tuple.f3,
 									tuple.f4, tuple.f5, tuple.f6 / tuple.f7,
-									tuple.f2 / tuple.f7, tuple.f3 / tuple.f7);
+									tuple.f2 / tuple.f7, tuple.f3 / tuple.f7,
+									tuple.f7);
 						}
 					}).print();
 
