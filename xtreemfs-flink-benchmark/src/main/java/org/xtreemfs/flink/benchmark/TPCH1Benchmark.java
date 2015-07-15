@@ -7,7 +7,6 @@ import java.util.Date;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.Partitioner;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -153,8 +152,9 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 									tuple.f3 / tuple.f7, tuple.f6 / tuple.f7,
 									tuple.f7);
 						}
-					}).sortPartition(0, Order.ASCENDING).setParallelism(1)
-					.sortPartition(1, Order.ASCENDING).print();
+					}).sortPartition(1, Order.ASCENDING)
+					.sortPartition(0, Order.ASCENDING).setParallelism(1)
+					.print();
 
 			jobExecResult = env.getLastJobExecutionResult();
 
