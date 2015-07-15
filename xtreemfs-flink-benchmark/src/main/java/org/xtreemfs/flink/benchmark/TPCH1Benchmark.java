@@ -3,7 +3,6 @@ package org.xtreemfs.flink.benchmark;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
@@ -11,8 +10,12 @@ import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
+import org.apache.flink.api.java.operators.AggregateOperator;
 import org.apache.flink.api.java.operators.DataSource;
+import org.apache.flink.api.java.operators.SortPartitionOperator;
+import org.apache.flink.api.java.operators.UnsortedGrouping;
 import org.apache.flink.api.java.tuple.Tuple7;
+import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.api.java.tuple.Tuple9;
 
 public class TPCH1Benchmark extends AbstractTPCHBenchmark {
@@ -84,8 +87,10 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					"yyyy-MM-dd");
 			final long referenceDate = dateParser.parse("1998-12-01").getTime();
 
-			// 86400000 milliseconds in a day.
-			final long delta = (new Random().nextInt(61) + 60) * 86400000;
+			// 86400000 milliseconds in a day, 90 is the TPC-H Q1 validation
+			// value.
+			final long delta = 90 * 86400000; // (new Random().nextInt(61) + 60)
+												// * 86400000;
 
 			DataSource<Tuple7<Float, Float, Float, Float, String, String, String>> lineItems = reader
 					.types(Float.class, Float.class, Float.class, Float.class,
@@ -107,45 +112,42 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					});
 
 			// Map for calculations.
-			DataSet<Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>> mappedLineItems = filteredLineItems
-					.map(new MapFunction<Tuple7<Float, Float, Float, Float, String, String, String>, Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>>() {
+			DataSet<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> mappedLineItems = filteredLineItems
+					.map(new MapFunction<Tuple7<Float, Float, Float, Float, String, String, String>, Tuple8<String, String, Float, Float, Float, Float, Float, Long>>() {
 
 						private static final long serialVersionUID = 8021849053433646399L;
 
 						@Override
-						public Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float> map(
+						public Tuple8<String, String, Float, Float, Float, Float, Float, Long> map(
 								Tuple7<Float, Float, Float, Float, String, String, String> tuple)
 								throws Exception {
 							float discountedPrice = tuple.f1
 									* (1.0f - tuple.f2);
-							return new Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>(
+							return new Tuple8<String, String, Float, Float, Float, Float, Float, Long>(
 									tuple.f4, tuple.f5, tuple.f0, tuple.f1,
 									discountedPrice, discountedPrice
-											* (1.0f + tuple.f3), tuple.f0,
-									tuple.f1, tuple.f2);
+											* (1.0f + tuple.f3), tuple.f2, 1L);
 						}
 					});
 
-			DataSet<Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>> result = mappedLineItems
+			SortPartitionOperator<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> result = mappedLineItems
 					.groupBy(0, 1).sum(2).andSum(3).andSum(4).andSum(5)
-					.andSum(6).andSum(7).andSum(8)
-					.sortPartition(0, Order.ASCENDING)
+					.andSum(6).andSum(7).sortPartition(0, Order.ASCENDING)
 					.sortPartition(1, Order.ASCENDING);
 
-			final long count = result.count();
 			result.map(
-					new MapFunction<Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>, Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>>() {
+					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>>() {
 
 						private static final long serialVersionUID = -6596407623350163628L;
 
 						@Override
 						public Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float> map(
-								Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float> tuple)
+								Tuple8<String, String, Float, Float, Float, Float, Float, Long> tuple)
 								throws Exception {
-							tuple.f6 /= count;
-							tuple.f7 /= count;
-							tuple.f8 /= count;
-							return tuple;
+							return new Tuple9<String, String, Float, Float, Float, Float, Float, Float, Float>(
+									tuple.f0, tuple.f1, tuple.f2, tuple.f3,
+									tuple.f4, tuple.f5, tuple.f6 / tuple.f7,
+									tuple.f2 / tuple.f7, tuple.f3 / tuple.f7);
 						}
 					}).print();
 
