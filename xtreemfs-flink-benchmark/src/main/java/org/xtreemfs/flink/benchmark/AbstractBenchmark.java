@@ -36,15 +36,18 @@ public abstract class AbstractBenchmark {
 			throw new IllegalArgumentException("Missing required argument --"
 					+ OPTION_DFS_WORKING_DIRECTORY_URI);
 		}
-		dfsWorkingDirectoryUri = cmd.getOptionValue(OPTION_DFS_WORKING_DIRECTORY_URI);
+		dfsWorkingDirectoryUri = cmd
+				.getOptionValue(OPTION_DFS_WORKING_DIRECTORY_URI);
 		if (!dfsWorkingDirectoryUri.endsWith("/")) {
 			dfsWorkingDirectoryUri += "/";
 		}
-		
+
 		try {
 			new URI(dfsWorkingDirectoryUri);
-		} catch(URISyntaxException e) {
-			throw new IllegalArgumentException("Invalid distributed file system URI: " + dfsWorkingDirectoryUri);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(
+					"Invalid distributed file system URI: "
+							+ dfsWorkingDirectoryUri);
 		}
 	}
 

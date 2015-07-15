@@ -51,8 +51,7 @@ public class XtreemFSFlinkBenchmark {
 		}
 
 		if (!cmd.hasOption("benchmark")) {
-			throw new ParseException(
-					"Missing required argument -b,--benchmark");
+			throw new ParseException("Missing required argument -b,--benchmark");
 		}
 
 		String benchmarkName = cmd.getOptionValue("benchmark");
@@ -64,13 +63,15 @@ public class XtreemFSFlinkBenchmark {
 		try {
 			benchmark.configureWithCli(cmd);
 		} catch (Throwable t) {
-			throw new RuntimeException("Error configuring benchmark: " + t.getMessage(), t);
+			throw new RuntimeException("Error configuring benchmark: "
+					+ t.getMessage(), t);
 		}
 
 		try {
 			benchmark.execute();
 		} catch (Throwable t) {
-			throw new RuntimeException("Error during benchmark execution: " + t.getMessage(), t);
+			throw new RuntimeException("Error during benchmark execution: "
+					+ t.getMessage(), t);
 		}
 	}
 
@@ -90,9 +91,12 @@ public class XtreemFSFlinkBenchmark {
 					+ ".\n");
 			benchmark.printUsage();
 			System.exit(1);
-		} catch(Throwable t) {
-			System.err.println("Error: " + t.getMessage() + ".\n");
+		} catch (IllegalArgumentException e) {
+			System.err.println("Invalid argument: " + e.getMessage());
 			benchmark.printUsage();
+			System.exit(1);
+		} catch (Throwable t) {
+			System.err.println("Other error: " + t.getMessage() + ".\n");
 			System.exit(1);
 		}
 	}

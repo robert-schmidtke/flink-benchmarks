@@ -62,16 +62,17 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 	}
 
 	protected void dbgen() throws IOException, InterruptedException {
-		String customerTblPath = dbgenExecutable.getParentFile().getAbsolutePath();
-		if(!customerTblPath.endsWith(File.separator)) {
+		String customerTblPath = dbgenExecutable.getParentFile()
+				.getAbsolutePath();
+		if (!customerTblPath.endsWith(File.separator)) {
 			customerTblPath += File.separator;
 		}
 		customerTblPath += "customer.tbl";
-		
-		if(new File(customerTblPath).exists() && !dbgenRegenerate) {
+
+		if (new File(customerTblPath).exists() && !dbgenRegenerate) {
 			return;
 		}
-		
+
 		List<String> dbgenCommand = new ArrayList<String>();
 		dbgenCommand.add(dbgenExecutable.getAbsolutePath());
 		dbgenCommand.add("-v");
