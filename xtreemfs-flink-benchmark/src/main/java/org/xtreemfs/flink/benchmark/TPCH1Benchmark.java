@@ -7,7 +7,6 @@ import java.util.Date;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.Partitioner;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -136,7 +135,6 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			AggregateOperator<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> result = mappedLineItems
 					.groupBy(0, 1).sum(2).andSum(3).andSum(4).andSum(5)
 					.andSum(6).andSum(7);
-			// TODO figure out sorting
 
 			result.map(
 					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
@@ -158,8 +156,6 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					.print();
 
 			jobExecResult = env.getLastJobExecutionResult();
-
-			// env.execute("TPC-H Query 1");
 		} catch (Exception e) {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);
