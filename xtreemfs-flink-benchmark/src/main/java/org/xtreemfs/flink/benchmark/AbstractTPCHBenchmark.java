@@ -14,11 +14,12 @@ import org.apache.commons.cli.Options;
 public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 
 	private static final String OPTION_TPCH_DBGEN_EXECUTABLE = "tpch-dbgen-executable";
-	private static final String OPTION_TPCH_DBGEN_REGENERATE = "tpch-dbgen-regenerate";
-	private static final String OPTION_TPCH_DBGEN_SCALE = "tpch-dbgen-scale";
-
 	protected File dbgenExecutable;
+
+	private static final String OPTION_TPCH_DBGEN_REGENERATE = "tpch-dbgen-regenerate";
 	private boolean dbgenRegenerate;
+
+	private static final String OPTION_TPCH_DBGEN_SCALE = "tpch-dbgen-scale";
 	private float dbgenScale;
 
 	@Override

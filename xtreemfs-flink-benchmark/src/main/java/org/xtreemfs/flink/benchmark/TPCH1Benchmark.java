@@ -33,9 +33,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		long copyFilesMillis = System.currentTimeMillis();
 		long fileSizes;
 		try {
-			fileSizes = BenchmarkUtil.copyFiles(dbgenExecutable.getParentFile()
-					.getAbsolutePath(), dfsWorkingDirectory.getAbsolutePath(),
-					"lineitem.tbl");
+			fileSizes = copyToWorkingDirectory(dbgenExecutable.getParentFile()
+					.getAbsolutePath(), "lineitem.tbl");
 			copyFilesMillis = System.currentTimeMillis() - copyFilesMillis;
 		} catch (IOException e) {
 			throw new RuntimeException("Error during file copy: "
@@ -164,8 +163,12 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		jobMillis = System.currentTimeMillis() - jobMillis;
 
 		long deleteFilesMillis = System.currentTimeMillis();
-		BenchmarkUtil.deleteFiles(dfsWorkingDirectory.getAbsolutePath(),
-				"lineitem.tbl");
+		try {
+			deleteFromWorkingDirectory("lineitem.tbl");
+		} catch (IOException e) {
+			throw new RuntimeException("Error during file remove: "
+					+ e.getMessage(), e);
+		}
 		deleteFilesMillis = System.currentTimeMillis() - deleteFilesMillis;
 
 		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "

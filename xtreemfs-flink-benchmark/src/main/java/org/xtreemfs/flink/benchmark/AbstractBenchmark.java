@@ -1,8 +1,13 @@
 package org.xtreemfs.flink.benchmark;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -10,28 +15,28 @@ import org.apache.commons.cli.Options;
 
 public abstract class AbstractBenchmark {
 
-	private final String OPTION_DFS_WORKING_DIRECTORY_PATH = "dfs-working-directory-path";
-	private final String OPTION_DFS_WORKING_DIRECTORY_URI = "dfs-working-directory-uri";
+	public static enum DFSType {
+		HDFS, XTREEMFS;
+	}
 
-	protected File dfsWorkingDirectory;
+	private DFSType dfsType;
+
+	// General options.
+	private final String OPTION_DFS_WORKING_DIRECTORY_URI = "dfs-working-directory-uri";
 	protected String dfsWorkingDirectoryUri;
+
+	// Options needed when using HDFS.
+	private final String OPTION_HDFS_HADOOP_EXECUTABLE = "hdfs-hadoop-executable";
+	private File hdfsHadoopExecutable;
+
+	// Options needed when using XtreemFS.
+	private final String OPTION_XTREEMFS_WORKING_DIRECTORY_PATH = "xtreemfs-working-directory-path";
+	private File xtreemfsWorkingDirectory;
 
 	protected AbstractBenchmark() {
 	}
 
 	public void configureWithCli(CommandLine cmd) {
-		if (!cmd.hasOption(OPTION_DFS_WORKING_DIRECTORY_PATH)) {
-			throw new IllegalArgumentException("Missing required argument --"
-					+ OPTION_DFS_WORKING_DIRECTORY_PATH);
-		}
-		dfsWorkingDirectory = new File(
-				cmd.getOptionValue(OPTION_DFS_WORKING_DIRECTORY_PATH));
-		if (!dfsWorkingDirectory.exists()) {
-			throw new IllegalArgumentException(
-					"Distributed file system working directory "
-							+ dfsWorkingDirectory.getPath() + " does not exist");
-		}
-
 		if (!cmd.hasOption(OPTION_DFS_WORKING_DIRECTORY_URI)) {
 			throw new IllegalArgumentException("Missing required argument --"
 					+ OPTION_DFS_WORKING_DIRECTORY_URI);
@@ -42,22 +47,149 @@ public abstract class AbstractBenchmark {
 			dfsWorkingDirectoryUri += "/";
 		}
 
+		URI uri;
 		try {
-			new URI(dfsWorkingDirectoryUri);
+			uri = new URI(dfsWorkingDirectoryUri);
 		} catch (URISyntaxException e) {
 			throw new IllegalArgumentException(
 					"Invalid distributed file system URI: "
 							+ dfsWorkingDirectoryUri);
 		}
+
+		try {
+			dfsType = DFSType.valueOf(uri.getScheme().toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException(
+					"Unsupported distributed file system scheme: "
+							+ uri.getScheme());
+		}
+
+		switch (dfsType) {
+		case HDFS:
+			if (!cmd.hasOption(OPTION_HDFS_HADOOP_EXECUTABLE)) {
+				throw new IllegalArgumentException(
+						"Missing required argument --"
+								+ OPTION_HDFS_HADOOP_EXECUTABLE);
+			}
+			hdfsHadoopExecutable = new File(
+					cmd.getOptionValue(OPTION_HDFS_HADOOP_EXECUTABLE));
+			if (!hdfsHadoopExecutable.exists()) {
+				throw new IllegalArgumentException("HDFS Hadoop executable "
+						+ hdfsHadoopExecutable.getPath() + " does not exist");
+			}
+			break;
+		case XTREEMFS:
+			if (!cmd.hasOption(OPTION_XTREEMFS_WORKING_DIRECTORY_PATH)) {
+				throw new IllegalArgumentException(
+						"Missing required argument --"
+								+ OPTION_XTREEMFS_WORKING_DIRECTORY_PATH);
+			}
+			xtreemfsWorkingDirectory = new File(
+					cmd.getOptionValue(OPTION_XTREEMFS_WORKING_DIRECTORY_PATH));
+			if (!xtreemfsWorkingDirectory.exists()) {
+				throw new IllegalArgumentException(
+						"Mounted XtreemFS working directory "
+								+ xtreemfsWorkingDirectory.getPath()
+								+ " does not exist");
+			}
+			break;
+		}
 	}
 
 	public void getOptions(Options options) {
-		options.addOption(new Option(null, OPTION_DFS_WORKING_DIRECTORY_PATH,
-				true,
-				"Path of the working directory hosting the distributed file system."));
 		options.addOption(new Option(null, OPTION_DFS_WORKING_DIRECTORY_URI,
 				true,
 				"URI of the working directory hosting the distributed file system."));
+		options.addOption(new Option(null, OPTION_HDFS_HADOOP_EXECUTABLE, true,
+				"Path of the Hadoop executable (HDFS only)"));
+		options.addOption(new Option(null,
+				OPTION_XTREEMFS_WORKING_DIRECTORY_PATH, true,
+				"Path of the mounted working directory (XtreemFS only)."));
+	}
+
+	protected long copyToWorkingDirectory(String fromDir, String... files)
+			throws IOException {
+		long fileSizes = 0L;
+		switch (dfsType) {
+		case HDFS:
+			List<String> hadoopCommand = new ArrayList<String>();
+			hadoopCommand.add(hdfsHadoopExecutable.getAbsolutePath());
+			hadoopCommand.add("fs");
+			hadoopCommand.add("-copyFromLocal");
+			hadoopCommand.add("-f");
+			hadoopCommand.add("");
+			hadoopCommand.add(dfsWorkingDirectoryUri);
+			for (String file : files) {
+				hadoopCommand.set(4, file);
+				Process hadoop = new ProcessBuilder(hadoopCommand).start();
+				BufferedReader errorReader = new BufferedReader(
+						new InputStreamReader(hadoop.getErrorStream()));
+				StringBuilder errors = new StringBuilder();
+				String line;
+				while ((line = errorReader.readLine()) != null) {
+					errors.append(line);
+				}
+				errorReader.close();
+
+				try {
+					if (hadoop.waitFor() != 0) {
+						throw new RuntimeException(
+								"Non-zero Hadoop exit status, stderr:\n"
+										+ errors.toString());
+					}
+				} catch (InterruptedException e) {
+					throw new RuntimeException(
+							"Error during Hadoop copyFromLocal: "
+									+ e.getMessage(), e);
+				}
+			}
+			break;
+		case XTREEMFS:
+			fileSizes = BenchmarkUtil.copyFiles(fromDir,
+					xtreemfsWorkingDirectory.getAbsolutePath(), files);
+		}
+		return fileSizes;
+	}
+
+	protected void deleteFromWorkingDirectory(String... files)
+			throws IOException {
+		switch (dfsType) {
+		case HDFS:
+			List<String> hadoopCommand = new ArrayList<String>();
+			hadoopCommand.add(hdfsHadoopExecutable.getAbsolutePath());
+			hadoopCommand.add("fs");
+			hadoopCommand.add("-rm");
+			hadoopCommand.add("-f");
+			hadoopCommand.add("");
+			for (String file : files) {
+				hadoopCommand.set(4, dfsWorkingDirectoryUri + file);
+				Process hadoop = new ProcessBuilder(hadoopCommand).start();
+				BufferedReader errorReader = new BufferedReader(
+						new InputStreamReader(hadoop.getErrorStream()));
+				StringBuilder errors = new StringBuilder();
+				String line;
+				while ((line = errorReader.readLine()) != null) {
+					errors.append(line);
+				}
+				errorReader.close();
+
+				try {
+					if (hadoop.waitFor() != 0) {
+						throw new RuntimeException(
+								"Non-zero Hadoop exit status, stderr:\n"
+										+ errors.toString());
+					}
+				} catch (InterruptedException e) {
+					throw new RuntimeException("Error during Hadoop rm: "
+							+ e.getMessage(), e);
+				}
+			}
+			break;
+		case XTREEMFS:
+			BenchmarkUtil.deleteFiles(
+					xtreemfsWorkingDirectory.getAbsolutePath(), files);
+			break;
+		}
 	}
 
 	public abstract void execute();
