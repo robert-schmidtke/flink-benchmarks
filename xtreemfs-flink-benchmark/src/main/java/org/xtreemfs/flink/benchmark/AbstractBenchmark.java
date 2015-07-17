@@ -112,6 +112,10 @@ public abstract class AbstractBenchmark {
 		long fileSizes = 0L;
 		switch (dfsType) {
 		case HDFS:
+			if (!fromDir.endsWith(File.separator)) {
+				fromDir += File.separator;
+			}
+
 			List<String> hadoopCommand = new ArrayList<String>();
 			hadoopCommand.add(hdfsHadoopExecutable.getAbsolutePath());
 			hadoopCommand.add("fs");
@@ -120,7 +124,7 @@ public abstract class AbstractBenchmark {
 			hadoopCommand.add("");
 			hadoopCommand.add(dfsWorkingDirectoryUri);
 			for (String file : files) {
-				hadoopCommand.set(4, file);
+				hadoopCommand.set(4, fromDir + file);
 				Process hadoop = new ProcessBuilder(hadoopCommand).start();
 				BufferedReader errorReader = new BufferedReader(
 						new InputStreamReader(hadoop.getErrorStream()));
