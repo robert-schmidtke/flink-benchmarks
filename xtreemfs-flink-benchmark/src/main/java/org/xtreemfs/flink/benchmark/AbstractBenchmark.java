@@ -146,6 +146,8 @@ public abstract class AbstractBenchmark {
 							"Error during Hadoop copyFromLocal: "
 									+ e.getMessage(), e);
 				}
+
+				fileSizes += new File(fromDir + file).length();
 			}
 			break;
 		case XTREEMFS:
