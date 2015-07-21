@@ -34,7 +34,7 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 				null,
 				OPTION_TPCH_DBGEN_SCALE,
 				true,
-				"Scale of the database population. Scale 1.0 represents ~1 GB of data (defaults to 1.0)."));
+				"Scale of the database population. Scale 1.0 represents ~1 GB of data. Defaults to 1.0."));
 	}
 
 	@Override
@@ -44,8 +44,14 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 		if (!cmd.hasOption(OPTION_TPCH_DBGEN_SCALE)) {
 			dbgenScale = 1.0f;
 		} else {
-			dbgenScale = Float.parseFloat(cmd
-					.getOptionValue(OPTION_TPCH_DBGEN_SCALE));
+			try {
+				dbgenScale = Float.parseFloat(cmd
+						.getOptionValue(OPTION_TPCH_DBGEN_SCALE));
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Bad argument for --"
+						+ OPTION_TPCH_DBGEN_SCALE + ": "
+						+ cmd.getOptionValue(OPTION_TPCH_DBGEN_SCALE));
+			}
 		}
 
 		dbgenRegenerate = cmd.hasOption(OPTION_TPCH_DBGEN_REGENERATE);
