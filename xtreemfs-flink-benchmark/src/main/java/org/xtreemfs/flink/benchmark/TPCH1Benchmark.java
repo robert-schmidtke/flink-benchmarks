@@ -101,7 +101,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
 			DataSource<Tuple7<Float, Float, Float, Float, String, String, String>> lineItems = reader
 					.types(Float.class, Float.class, Float.class, Float.class,
-							String.class, String.class, String.class);
+							String.class, String.class, String.class).withParameters(parameters);
 
 			// Filter on date.
 			DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems
