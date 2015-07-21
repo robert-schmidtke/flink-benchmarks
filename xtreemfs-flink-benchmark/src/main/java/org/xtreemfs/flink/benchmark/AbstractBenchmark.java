@@ -23,19 +23,21 @@ public abstract class AbstractBenchmark {
 	private DFSType dfsType;
 
 	// General options.
-	private final String OPTION_DFS_WORKING_DIRECTORY_URI = "dfs-working-directory-uri";
+	private static final String OPTION_DFS_WORKING_DIRECTORY_URI = "dfs-working-directory-uri";
 	protected String dfsWorkingDirectoryUri;
+	private static final String OPTION_FLINK_ASSIGN_LOCALLY_ONLY = "flink-assign-locally-only";
+	protected boolean flinkAssignLocallyOnly;
 
 	// Options needed when using HDFS.
-	private final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
+	private static final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
 	private String hdfsBlocksize;
-	private final String OPTION_HDFS_HADOOP_EXECUTABLE = "hdfs-hadoop-executable";
+	private static final String OPTION_HDFS_HADOOP_EXECUTABLE = "hdfs-hadoop-executable";
 	private File hdfsHadoopExecutable;
-	private final String OPTION_HDFS_REPLICATION = "hdfs-replication";
+	private static final String OPTION_HDFS_REPLICATION = "hdfs-replication";
 	private int hdfsReplication;
 
 	// Options needed when using XtreemFS.
-	private final String OPTION_XTREEMFS_WORKING_DIRECTORY_PATH = "xtreemfs-working-directory-path";
+	private static final String OPTION_XTREEMFS_WORKING_DIRECTORY_PATH = "xtreemfs-working-directory-path";
 	private File xtreemfsWorkingDirectory;
 
 	protected AbstractBenchmark() {
@@ -126,12 +128,19 @@ public abstract class AbstractBenchmark {
 			}
 			break;
 		}
+
+		flinkAssignLocallyOnly = cmd
+				.hasOption(OPTION_FLINK_ASSIGN_LOCALLY_ONLY);
 	}
 
 	public void getOptions(Options options) {
 		options.addOption(new Option(null, OPTION_DFS_WORKING_DIRECTORY_URI,
 				true,
 				"URI of the working directory hosting the distributed file system."));
+		options.addOption(new Option(null, OPTION_FLINK_ASSIGN_LOCALLY_ONLY,
+				false,
+				"Specify if only local splits should be assigned. Disabled by default."));
+
 		options.addOption(new Option(
 				null,
 				OPTION_HDFS_BLOCKSIZE,
@@ -141,6 +150,7 @@ public abstract class AbstractBenchmark {
 				"Path of the Hadoop executable (HDFS only)"));
 		options.addOption(new Option(null, OPTION_HDFS_REPLICATION, true,
 				"Replication factor to use, must be positive (HDFS only). Defaults to 1."));
+
 		options.addOption(new Option(null,
 				OPTION_XTREEMFS_WORKING_DIRECTORY_PATH, true,
 				"Path of the mounted working directory (XtreemFS only)."));
