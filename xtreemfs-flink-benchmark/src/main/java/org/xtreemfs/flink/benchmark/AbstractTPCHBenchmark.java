@@ -28,8 +28,11 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 
 		options.addOption(new Option(null, OPTION_TPCH_DBGEN_EXECUTABLE, true,
 				"Path to the compiled DBGen."));
-		options.addOption(new Option(null, OPTION_TPCH_DBGEN_REGENERATE, false,
-				"Specify if data should be regenerated if it's already there."));
+		options.addOption(new Option(
+				null,
+				OPTION_TPCH_DBGEN_REGENERATE,
+				false,
+				"Specify if data should be regenerated if it's already there. Oisabled by default."));
 		options.addOption(new Option(
 				null,
 				OPTION_TPCH_DBGEN_SCALE,
