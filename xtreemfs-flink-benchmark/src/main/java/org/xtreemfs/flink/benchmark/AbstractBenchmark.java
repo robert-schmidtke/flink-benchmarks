@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -26,8 +27,12 @@ public abstract class AbstractBenchmark {
 	protected String dfsWorkingDirectoryUri;
 
 	// Options needed when using HDFS.
+	private final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
+	private String hdfsBlocksize;
 	private final String OPTION_HDFS_HADOOP_EXECUTABLE = "hdfs-hadoop-executable";
 	private File hdfsHadoopExecutable;
+	private final String OPTION_HDFS_REPLICATION = "hdfs-replication";
+	private int hdfsReplication;
 
 	// Options needed when using XtreemFS.
 	private final String OPTION_XTREEMFS_WORKING_DIRECTORY_PATH = "xtreemfs-working-directory-path";
@@ -77,6 +82,33 @@ public abstract class AbstractBenchmark {
 				throw new IllegalArgumentException("HDFS Hadoop executable "
 						+ hdfsHadoopExecutable.getPath() + " does not exist");
 			}
+
+			if (!cmd.hasOption(OPTION_HDFS_BLOCKSIZE)) {
+				hdfsBlocksize = "128M";
+			} else {
+				hdfsBlocksize = cmd.getOptionValue(OPTION_HDFS_BLOCKSIZE);
+				if (!Pattern.matches("^[1-9]+[kKmMgGtTpPeE]?$", hdfsBlocksize)) {
+					throw new IllegalArgumentException("Bad argument for --"
+							+ OPTION_HDFS_BLOCKSIZE + ": " + hdfsBlocksize);
+				}
+			}
+
+			if (!cmd.hasOption(OPTION_HDFS_REPLICATION)) {
+				hdfsReplication = 3;
+			} else {
+				try {
+					hdfsReplication = Integer.parseInt(cmd
+							.getOptionValue(OPTION_HDFS_REPLICATION));
+					if (hdfsReplication <= 0) {
+						throw new IllegalArgumentException("--"
+								+ OPTION_HDFS_REPLICATION + " must be positive");
+					}
+				} catch (NumberFormatException e) {
+					throw new IllegalArgumentException("Bad argument for --"
+							+ OPTION_HDFS_REPLICATION + ": "
+							+ cmd.getOptionValue(OPTION_HDFS_REPLICATION));
+				}
+			}
 			break;
 		case XTREEMFS:
 			if (!cmd.hasOption(OPTION_XTREEMFS_WORKING_DIRECTORY_PATH)) {
@@ -100,8 +132,15 @@ public abstract class AbstractBenchmark {
 		options.addOption(new Option(null, OPTION_DFS_WORKING_DIRECTORY_URI,
 				true,
 				"URI of the working directory hosting the distributed file system."));
+		options.addOption(new Option(
+				null,
+				OPTION_HDFS_BLOCKSIZE,
+				true,
+				"Block size to use in bytes, or as multiples with case-insensitive suffixes K, M, G, T, P, E (HDFS only). Defaults to 128M."));
 		options.addOption(new Option(null, OPTION_HDFS_HADOOP_EXECUTABLE, true,
 				"Path of the Hadoop executable (HDFS only)"));
+		options.addOption(new Option(null, OPTION_HDFS_REPLICATION, true,
+				"Replication factor to use, must be positive (HDFS only). Defaults to 1."));
 		options.addOption(new Option(null,
 				OPTION_XTREEMFS_WORKING_DIRECTORY_PATH, true,
 				"Path of the mounted working directory (XtreemFS only)."));
@@ -119,12 +158,14 @@ public abstract class AbstractBenchmark {
 			List<String> hadoopCommand = new ArrayList<String>();
 			hadoopCommand.add(hdfsHadoopExecutable.getAbsolutePath());
 			hadoopCommand.add("fs");
+			hadoopCommand.add("-Ddfs.blocksize=" + hdfsBlocksize);
+			hadoopCommand.add("-Ddfs.replication=" + hdfsReplication);
 			hadoopCommand.add("-copyFromLocal");
 			hadoopCommand.add("-f");
 			hadoopCommand.add("");
 			hadoopCommand.add(dfsWorkingDirectoryUri);
 			for (String file : files) {
-				hadoopCommand.set(4, fromDir + file);
+				hadoopCommand.set(6, fromDir + file);
 				Process hadoop = new ProcessBuilder(hadoopCommand).start();
 				BufferedReader errorReader = new BufferedReader(
 						new InputStreamReader(hadoop.getErrorStream()));
