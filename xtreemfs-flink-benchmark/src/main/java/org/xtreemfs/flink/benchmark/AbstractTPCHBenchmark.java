@@ -32,7 +32,7 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 				null,
 				OPTION_TPCH_DBGEN_REGENERATE,
 				false,
-				"Specify if data should be regenerated if it's already there. Oisabled by default."));
+				"Specify if data should be regenerated if it's already there. Disabled by default."));
 		options.addOption(new Option(
 				null,
 				OPTION_TPCH_DBGEN_SCALE,
