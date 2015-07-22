@@ -75,6 +75,12 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			parameters.setBoolean(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG,
 					flinkAssignLocallyOnly);
 
+			System.out.println("Parameters:");
+			System.out.println(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG
+					+ " : "
+					+ parameters.getBoolean(
+							FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG, false));
+
 			CsvReader reader = env.readCsvFile(
 					dfsWorkingDirectoryUri + "lineitem.tbl")
 					.fieldDelimiter("|");
@@ -101,7 +107,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
 			DataSource<Tuple7<Float, Float, Float, Float, String, String, String>> lineItems = reader
 					.types(Float.class, Float.class, Float.class, Float.class,
-							String.class, String.class, String.class).withParameters(parameters);
+							String.class, String.class, String.class)
+					.withParameters(parameters);
 
 			// Filter on date.
 			DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems
