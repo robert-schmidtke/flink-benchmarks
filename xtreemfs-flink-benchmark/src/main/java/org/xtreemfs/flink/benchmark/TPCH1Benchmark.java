@@ -75,12 +75,6 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			parameters.setBoolean(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG,
 					flinkAssignLocallyOnly);
 
-			System.out.println("Parameters:");
-			System.out.println(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG
-					+ " : "
-					+ parameters.getBoolean(
-							FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG, false));
-
 			CsvReader reader = env.readCsvFile(
 					dfsWorkingDirectoryUri + "lineitem.tbl")
 					.fieldDelimiter("|");
