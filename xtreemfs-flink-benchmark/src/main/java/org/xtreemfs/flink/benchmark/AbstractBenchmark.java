@@ -27,6 +27,8 @@ public abstract class AbstractBenchmark {
 	protected String dfsWorkingDirectoryUri;
 	private static final String OPTION_FLINK_ASSIGN_LOCALLY_ONLY = "flink-assign-locally-only";
 	protected boolean flinkAssignLocallyOnly;
+	private static final String OPTION_NO_JOB = "no-job";
+	protected boolean noJob;
 
 	// Options needed when using HDFS.
 	private static final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
@@ -131,6 +133,7 @@ public abstract class AbstractBenchmark {
 
 		flinkAssignLocallyOnly = cmd
 				.hasOption(OPTION_FLINK_ASSIGN_LOCALLY_ONLY);
+		noJob = cmd.hasOption(OPTION_NO_JOB);
 	}
 
 	public void getOptions(Options options) {
@@ -140,6 +143,8 @@ public abstract class AbstractBenchmark {
 		options.addOption(new Option(null, OPTION_FLINK_ASSIGN_LOCALLY_ONLY,
 				false,
 				"Specify if only local splits should be assigned. Disabled by default."));
+		options.addOption(new Option(null, OPTION_NO_JOB, false,
+				"Specify if no job should be executed. Disabled by default."));
 
 		options.addOption(new Option(
 				null,

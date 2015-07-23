@@ -43,6 +43,14 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					+ e.getMessage(), e);
 		}
 
+		if (noJob) {
+			long deleteFilesMillis = cleanup();
+			System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
+					+ copyFilesMillis + "ms, deleteFiles: " + deleteFilesMillis
+					+ "ms, fileSizes: " + fileSizes);
+			return;
+		}
+
 		// select
 		// l_returnflag,
 		// l_linestatus,
@@ -169,6 +177,15 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
 		jobMillis = System.currentTimeMillis() - jobMillis;
 
+		long deleteFilesMillis = cleanup();
+		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
+				+ copyFilesMillis + "ms, job (wall): " + jobMillis
+				+ "ms, job (flink): " + jobExecResult.getNetRuntime()
+				+ "ms deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
+				+ fileSizes);
+	}
+
+	private long cleanup() {
 		long deleteFilesMillis = System.currentTimeMillis();
 		try {
 			deleteFromWorkingDirectory("lineitem.tbl");
@@ -176,13 +193,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			throw new RuntimeException("Error during file remove: "
 					+ e.getMessage(), e);
 		}
-		deleteFilesMillis = System.currentTimeMillis() - deleteFilesMillis;
-
-		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
-				+ copyFilesMillis + "ms, job (wall): " + jobMillis
-				+ "ms, job (flink): " + jobExecResult.getNetRuntime()
-				+ "ms deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
-				+ fileSizes);
+		return System.currentTimeMillis() - deleteFilesMillis;
 	}
 
 	@Override
