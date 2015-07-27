@@ -7,7 +7,6 @@ import java.util.Date;
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.io.FileInputFormat;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
@@ -80,8 +79,6 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					.getExecutionEnvironment();
 
 			Configuration parameters = new Configuration();
-			parameters.setBoolean(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG,
-					flinkAssignLocallyOnly);
 
 			CsvReader reader = env.readCsvFile(
 					dfsWorkingDirectoryUri + "lineitem.tbl")
