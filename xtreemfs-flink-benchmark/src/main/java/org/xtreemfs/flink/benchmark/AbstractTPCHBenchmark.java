@@ -72,22 +72,7 @@ public abstract class AbstractTPCHBenchmark extends AbstractBenchmark {
 	}
 
 	protected void dbgen() throws IOException, InterruptedException {
-		String tblBasePath = dbgenExecutable.getParentFile().getAbsolutePath();
-		if (!tblBasePath.endsWith(File.separator)) {
-			tblBasePath += File.separator;
-		}
-
-		boolean allTablesExist = new File(tblBasePath + "customer.tbl")
-				.exists();
-		allTablesExist &= new File(tblBasePath + "lineitem.tbl").exists();
-		allTablesExist &= new File(tblBasePath + "nation.tbl").exists();
-		allTablesExist &= new File(tblBasePath + "orders.tbl").exists();
-		allTablesExist &= new File(tblBasePath + "partsupp.tbl").exists();
-		allTablesExist &= new File(tblBasePath + "part.tbl").exists();
-		allTablesExist &= new File(tblBasePath + "region.tbl").exists();
-		allTablesExist &= new File(tblBasePath + "supplier.tbl").exists();
-
-		if (allTablesExist && !dbgenRegenerate) {
+		if (!dbgenRegenerate) {
 			return;
 		}
 
