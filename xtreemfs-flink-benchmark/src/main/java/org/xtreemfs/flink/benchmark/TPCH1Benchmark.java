@@ -257,7 +257,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			System.out.println("; Avg. Disc. is over tolerance: " + difference
 					+ ", expecting " + tolerance + ".");
 		} else {
-			System.out.println("; Avg. Disc is fine (" + difference + ").");
+			System.out.println("; Avg. Disc. is fine (" + difference + ").");
 		}
 	}
 
