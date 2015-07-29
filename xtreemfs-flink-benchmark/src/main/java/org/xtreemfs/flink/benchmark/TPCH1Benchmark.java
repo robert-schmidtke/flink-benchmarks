@@ -3,6 +3,7 @@ package org.xtreemfs.flink.benchmark;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -12,7 +13,6 @@ import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
-import org.apache.flink.api.java.operators.AggregateOperator;
 import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.tuple.Tuple10;
 import org.apache.flink.api.java.tuple.Tuple7;
@@ -146,12 +146,15 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 						}
 					});
 
-			AggregateOperator<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> result = mappedLineItems
-					.groupBy(0, 1).sum(2).andSum(3).andSum(4).andSum(5)
-					.andSum(6).andSum(7);
-
-			result.map(
-					new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
+			DataSet<Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>> result = mappedLineItems
+					.groupBy(0, 1)
+					.sum(2)
+					.andSum(3)
+					.andSum(4)
+					.andSum(5)
+					.andSum(6)
+					.andSum(7)
+					.map(new MapFunction<Tuple8<String, String, Float, Float, Float, Float, Float, Long>, Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>>() {
 
 						private static final long serialVersionUID = -6596407623350163628L;
 
@@ -166,8 +169,33 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 									tuple.f7);
 						}
 					}).sortPartition(0, Order.ASCENDING).setParallelism(1)
-					.sortPartition(1, Order.ASCENDING).setParallelism(1)
-					.print();
+					.sortPartition(1, Order.ASCENDING).setParallelism(1);
+			result.print();
+
+			// Output according to dbgen (factor 1.0):
+			// l|l|sum_qty|sum_base_price|sum_disc_price|sum_charge|avg_qty|avg_price|avg_disc|count_order
+			// A|F|37734107.00|56586554400.73|53758257134.87|55909065222.83|25.52|38273.13|0.05|1478493
+			// N|F|991417.00|1487504710.38|1413082168.05|1469649223.19|25.52|38284.47|0.05|38854
+			// N|O|74476040.00|111701729697.74|106118230307.61|110367043872.50|25.50|38249.12|0.05|2920374
+			// R|F|37719753.00|56568041380.90|53741292684.60|55889619119.83|25.51|38250.85|0.05|1478870
+
+			// So we cannot test the sums and counts, but we can check the
+			// averages and the order.
+			List<Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>> results = result
+					.collect();
+			if (results.size() != 4) {
+				System.out.println("Incorrect number of results: "
+						+ results.size() + ", expected 4.");
+			} else {
+				checkResult(results.get(0), "A", "F", 25.52f, 38273.13f, 0.05f,
+						0.01f);
+				checkResult(results.get(1), "N", "F", 25.52f, 38284.47f, 0.05f,
+						0.01f);
+				checkResult(results.get(2), "N", "O", 25.50f, 38249.12f, 0.05f,
+						0.01f);
+				checkResult(results.get(3), "R", "F", 25.51f, 38250.85f, 0.05f,
+						0.01f);
+			}
 
 			jobExecResult = env.getLastJobExecutionResult();
 		} catch (Exception e) {
@@ -194,6 +222,43 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					+ e.getMessage(), e);
 		}
 		return System.currentTimeMillis() - deleteFilesMillis;
+	}
+
+	private static void checkResult(
+			Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long> result,
+			String returnFlag, String lineStatus, float avgQty, float avgPrice,
+			float avgDisc, float tolerance) {
+		if (!returnFlag.equals(result.f0) || !lineStatus.equals(result.f1)) {
+			System.out.print("Element is in the wrong order: " + result.f0
+					+ "|" + result.f1 + ", expecting " + returnFlag + "|"
+					+ lineStatus);
+		} else {
+			System.out.print("Order is fine");
+		}
+
+		float difference = Math.abs(result.f6 - avgQty) / avgQty;
+		if (difference > tolerance) {
+			System.out.print("; Avg. Qty. is over tolerance: " + difference
+					+ ", expecting " + tolerance);
+		} else {
+			System.out.print("; Avg. Qty. is fine (" + difference + ")");
+		}
+
+		difference = Math.abs(result.f7 - avgPrice) / avgPrice;
+		if (difference > tolerance) {
+			System.out.print("; Avg. Price is over tolerance: " + difference
+					+ ", expecting " + tolerance);
+		} else {
+			System.out.println("; Avg. Price is fine (" + difference + ")");
+		}
+
+		difference = Math.abs(result.f8 - avgDisc) / avgDisc;
+		if (difference > tolerance) {
+			System.out.println("; Avg. Disc. is over tolerance: " + difference
+					+ ", expecting " + tolerance + ".");
+		} else {
+			System.out.println("; Avg. Disc is fine (" + difference + ").");
+		}
 	}
 
 	@Override
