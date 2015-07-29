@@ -188,13 +188,13 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 						+ results.size() + ", expected 4.");
 			} else {
 				checkResult(results.get(0), "A", "F", 25.52f, 38273.13f, 0.05f,
-						0.01f);
+						0.002f);
 				checkResult(results.get(1), "N", "F", 25.52f, 38284.47f, 0.05f,
-						0.01f);
+						0.002f);
 				checkResult(results.get(2), "N", "O", 25.50f, 38249.12f, 0.05f,
-						0.01f);
+						0.002f);
 				checkResult(results.get(3), "R", "F", 25.51f, 38250.85f, 0.05f,
-						0.01f);
+						0.002f);
 			}
 
 			jobExecResult = env.getLastJobExecutionResult();
@@ -249,7 +249,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			System.out.print("; Avg. Price is over tolerance: " + difference
 					+ ", expecting " + tolerance);
 		} else {
-			System.out.println("; Avg. Price is fine (" + difference + ")");
+			System.out.print("; Avg. Price is fine (" + difference + ")");
 		}
 
 		difference = Math.abs(result.f8 - avgDisc) / avgDisc;
