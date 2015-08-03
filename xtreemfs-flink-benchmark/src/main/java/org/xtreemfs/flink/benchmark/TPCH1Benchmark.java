@@ -18,6 +18,7 @@ import org.apache.flink.api.java.tuple.Tuple10;
 import org.apache.flink.api.java.tuple.Tuple7;
 import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.core.fs.FileSystem.WriteMode;
 
 public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 
@@ -171,6 +172,14 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					}).sortPartition(0, Order.ASCENDING).setParallelism(1)
 					.sortPartition(1, Order.ASCENDING).setParallelism(1);
 			result.print();
+
+			result.writeAsCsv(dfsWorkingDirectoryUri + "tpchq1.csv", "\n", "|",
+					WriteMode.OVERWRITE);
+
+			copyFilesMillis -= System.currentTimeMillis();
+			fileSizes += copyFromWorkingDirectory(
+					outputDirectory.getAbsolutePath(), "tpchq1.csv");
+			copyFilesMillis += System.currentTimeMillis();
 
 			// Output according to dbgen (factor 1.0):
 			// l|l|sum_qty|sum_base_price|sum_disc_price|sum_charge|avg_qty|avg_price|avg_disc|count_order

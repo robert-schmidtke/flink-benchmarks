@@ -29,6 +29,8 @@ public abstract class AbstractBenchmark {
 	protected boolean flinkAssignLocallyOnly;
 	private static final String OPTION_NO_JOB = "no-job";
 	protected boolean noJob;
+	protected static final String OPTION_OUTPUT_DIRECTORY_PATH = "output-directory-path";
+	protected File outputDirectory;
 
 	// Options needed when using HDFS.
 	private static final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
@@ -134,6 +136,17 @@ public abstract class AbstractBenchmark {
 		flinkAssignLocallyOnly = cmd
 				.hasOption(OPTION_FLINK_ASSIGN_LOCALLY_ONLY);
 		noJob = cmd.hasOption(OPTION_NO_JOB);
+
+		if (!cmd.hasOption(OPTION_OUTPUT_DIRECTORY_PATH)) {
+			throw new IllegalArgumentException("Missing required arguments --"
+					+ OPTION_OUTPUT_DIRECTORY_PATH);
+		}
+		outputDirectory = new File(
+				cmd.getOptionValue(OPTION_OUTPUT_DIRECTORY_PATH));
+		if (!outputDirectory.exists()) {
+			throw new IllegalArgumentException("Output directory "
+					+ outputDirectory.getPath() + " does not exist");
+		}
 	}
 
 	public void getOptions(Options options) {
@@ -209,6 +222,56 @@ public abstract class AbstractBenchmark {
 		case XTREEMFS:
 			fileSizes = BenchmarkUtil.copyFiles(fromDir,
 					xtreemfsWorkingDirectory.getAbsolutePath(), files);
+		}
+		return fileSizes;
+	}
+
+	protected long copyFromWorkingDirectory(String toDir, String... files)
+			throws IOException {
+		long fileSizes = 0L;
+		switch (dfsType) {
+		case HDFS:
+			if (!toDir.endsWith(File.separator)) {
+				toDir += File.separator;
+			}
+
+			List<String> hadoopCommand = new ArrayList<String>();
+			hadoopCommand.add(hdfsHadoopExecutable.getAbsolutePath());
+			hadoopCommand.add("fs");
+			hadoopCommand.add("-copyToLocal");
+			hadoopCommand.add("");
+			hadoopCommand.add(toDir);
+			for (String file : files) {
+				hadoopCommand.set(3, dfsWorkingDirectoryUri + file);
+				Process hadoop = new ProcessBuilder(hadoopCommand).start();
+				BufferedReader errorReader = new BufferedReader(
+						new InputStreamReader(hadoop.getErrorStream()));
+				StringBuilder errors = new StringBuilder();
+				String line;
+				while ((line = errorReader.readLine()) != null) {
+					errors.append(line);
+				}
+				errorReader.close();
+
+				try {
+					if (hadoop.waitFor() != 0) {
+						throw new RuntimeException(
+								"Non-zero Hadoop exit status, stderr:\n"
+										+ errors.toString());
+					}
+				} catch (InterruptedException e) {
+					throw new RuntimeException(
+							"Error during Hadoop copyToLocal: "
+									+ e.getMessage(), e);
+				}
+
+				fileSizes += new File(toDir + file).length();
+			}
+			break;
+		case XTREEMFS:
+			BenchmarkUtil.copyFiles(xtreemfsWorkingDirectory.getAbsolutePath(),
+					toDir, files);
+			break;
 		}
 		return fileSizes;
 	}
