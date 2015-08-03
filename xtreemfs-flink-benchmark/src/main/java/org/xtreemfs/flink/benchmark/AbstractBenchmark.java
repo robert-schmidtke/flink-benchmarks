@@ -158,6 +158,8 @@ public abstract class AbstractBenchmark {
 				"Specify if only local splits should be assigned. Disabled by default."));
 		options.addOption(new Option(null, OPTION_NO_JOB, false,
 				"Specify if no job should be executed. Disabled by default."));
+		options.addOption(new Option(null, OPTION_OUTPUT_DIRECTORY_PATH, true,
+				"Path of the output directory where results are placed."));
 
 		options.addOption(new Option(
 				null,
