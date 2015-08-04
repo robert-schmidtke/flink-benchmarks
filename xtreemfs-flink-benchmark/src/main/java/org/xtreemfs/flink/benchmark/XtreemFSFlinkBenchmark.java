@@ -25,6 +25,8 @@ public class XtreemFSFlinkBenchmark {
 
 		AbstractBenchmark tpch1 = new TPCH1Benchmark();
 		benchmarks.put(tpch1.getName(), tpch1);
+		AbstractBenchmark tpch16 = new TPCH16Benchmark();
+		benchmarks.put(tpch16.getName(), tpch16);
 
 		options = new Options();
 		options.addOption(new Option("h", "help", false, "Print this message."));
