@@ -171,10 +171,12 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 						}
 					}).sortPartition(0, Order.ASCENDING).setParallelism(1)
 					.sortPartition(1, Order.ASCENDING).setParallelism(1);
-			result.print();
 
 			result.writeAsCsv(dfsWorkingDirectoryUri + "tpchq1.csv", "\n", "|",
 					WriteMode.OVERWRITE);
+
+			// print triggers program execution
+			result.print();
 
 			copyFilesMillis -= System.currentTimeMillis();
 			fileSizes += copyFromWorkingDirectory(
