@@ -242,9 +242,10 @@ public abstract class AbstractBenchmark {
 			hadoopCommand.add("fs");
 			hadoopCommand.add("-copyToLocal");
 			hadoopCommand.add("");
-			hadoopCommand.add(toDir);
+			hadoopCommand.add("");
 			for (String file : files) {
 				hadoopCommand.set(3, dfsWorkingDirectoryUri + file);
+				hadoopCommand.set(4, toDir + file);
 				Process hadoop = new ProcessBuilder(hadoopCommand).start();
 				BufferedReader errorReader = new BufferedReader(
 						new InputStreamReader(hadoop.getErrorStream()));
