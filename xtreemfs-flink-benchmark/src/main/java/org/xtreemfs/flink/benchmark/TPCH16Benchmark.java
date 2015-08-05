@@ -1,6 +1,7 @@
 package org.xtreemfs.flink.benchmark;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -50,7 +51,7 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 		}
 
 		JobExecutionResult jobExecResult = null;
-		long jobMillis = System.currentTimeMillis();
+		long jobMillis = -1L;
 		try {
 			ExecutionEnvironment env = ExecutionEnvironment
 					.getExecutionEnvironment();
@@ -219,9 +220,11 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 			result.writeAsCsv(dfsWorkingDirectoryUri + "tpchq16.csv", "\n",
 					"|", WriteMode.OVERWRITE);
 
-			result.print();
+			jobMillis = System.currentTimeMillis();
+			env.execute();
+			jobMillis = System.currentTimeMillis() - jobMillis;
 
-			// TODO collect and check result
+			// TODO check result
 
 			copyFilesMillis -= System.currentTimeMillis();
 			fileSizes += copyFromWorkingDirectory(
@@ -233,8 +236,6 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);
 		}
-
-		jobMillis = System.currentTimeMillis() - jobMillis;
 
 		long deleteFilesMillis = cleanup();
 		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "

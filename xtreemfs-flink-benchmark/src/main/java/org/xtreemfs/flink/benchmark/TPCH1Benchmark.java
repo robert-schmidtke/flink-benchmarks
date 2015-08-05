@@ -75,7 +75,7 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 		// l_linestatus;
 
 		JobExecutionResult jobExecResult = null;
-		long jobMillis = System.currentTimeMillis();
+		long jobMillis = -1L;
 		try {
 			ExecutionEnvironment env = ExecutionEnvironment
 					.getExecutionEnvironment();
@@ -176,7 +176,9 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					WriteMode.OVERWRITE);
 
 			// print triggers program execution
+			jobMillis = System.currentTimeMillis();
 			result.print();
+			jobMillis = System.currentTimeMillis() - jobMillis;
 
 			copyFilesMillis -= System.currentTimeMillis();
 			fileSizes += copyFromWorkingDirectory(
@@ -213,8 +215,6 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);
 		}
-
-		jobMillis = System.currentTimeMillis() - jobMillis;
 
 		long deleteFilesMillis = cleanup();
 		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
