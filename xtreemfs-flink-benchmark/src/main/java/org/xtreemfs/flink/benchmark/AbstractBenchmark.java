@@ -248,7 +248,7 @@ public abstract class AbstractBenchmark {
 				hadoopCommand.set(4, toDir + file);
 				Process hadoop = new ProcessBuilder(hadoopCommand).start();
 				BufferedReader errorReader = new BufferedReader(
-						new InputStreamReader(hadoop.getInputStream()));
+						new InputStreamReader(hadoop.getErrorStream()));
 				StringBuilder errors = new StringBuilder();
 				String line;
 				while ((line = errorReader.readLine()) != null) {
