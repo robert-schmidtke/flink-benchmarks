@@ -1,7 +1,6 @@
 package org.xtreemfs.flink.benchmark;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;

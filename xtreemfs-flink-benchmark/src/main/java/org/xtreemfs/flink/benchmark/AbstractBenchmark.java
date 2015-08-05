@@ -267,6 +267,8 @@ public abstract class AbstractBenchmark {
 									+ e.getMessage(), e);
 				}
 
+				System.out.println("Copied " + dfsWorkingDirectoryUri + file
+						+ " to " + toDir);
 				fileSizes += new File(toDir + file).length();
 			}
 			break;
