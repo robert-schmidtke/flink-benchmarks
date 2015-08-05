@@ -212,8 +212,9 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 			DataSet<Tuple4<String, String, Integer, Long>> result = joinedParts
 					.groupBy(0, 1, 2).sum(3).sortPartition(3, Order.DESCENDING)
 					.setParallelism(1).sortPartition(0, Order.ASCENDING)
-					.sortPartition(1, Order.ASCENDING)
-					.sortPartition(2, Order.ASCENDING);
+					.setParallelism(1).sortPartition(1, Order.ASCENDING)
+					.setParallelism(1).sortPartition(2, Order.ASCENDING)
+					.setParallelism(1);
 
 			result.writeAsCsv(dfsWorkingDirectoryUri + "tpchq16.csv", "\n",
 					"|", WriteMode.OVERWRITE);
