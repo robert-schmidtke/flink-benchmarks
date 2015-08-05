@@ -242,18 +242,20 @@ public abstract class AbstractBenchmark {
 			hadoopCommand.add("fs");
 			hadoopCommand.add("-copyToLocal");
 			hadoopCommand.add("");
-			hadoopCommand.add(toDir);
+			hadoopCommand.add("");
 			for (String file : files) {
 				hadoopCommand.set(3, dfsWorkingDirectoryUri + file);
+				hadoopCommand.set(4, toDir + file);
 				Process hadoop = new ProcessBuilder(hadoopCommand).start();
 				BufferedReader errorReader = new BufferedReader(
-						new InputStreamReader(hadoop.getErrorStream()));
+						new InputStreamReader(hadoop.getInputStream()));
 				StringBuilder errors = new StringBuilder();
 				String line;
 				while ((line = errorReader.readLine()) != null) {
 					errors.append(line);
 				}
 				errorReader.close();
+				System.out.println("Copy output: " + errors.toString());
 
 				try {
 					if (hadoop.waitFor() != 0) {
@@ -266,9 +268,6 @@ public abstract class AbstractBenchmark {
 							"Error during Hadoop copyToLocal: "
 									+ e.getMessage(), e);
 				}
-
-				System.out.println("Copied " + dfsWorkingDirectoryUri + file
-						+ " to " + toDir);
 				fileSizes += new File(toDir + file).length();
 			}
 			break;
