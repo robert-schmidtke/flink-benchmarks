@@ -248,7 +248,7 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 
 				boolean sizeOk = false;
 				for (int j = 0; j < sizes.length && !sizeOk; ++j) {
-					sizeOk = r.f2.equals(sizes[j]);
+					sizeOk = r.f2 == sizes[j];
 				}
 				if (!sizeOk) {
 					System.out.println("Record " + i + " has invalid size: "
@@ -256,11 +256,12 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 					ok = false;
 				}
 
-				if (r.f3 < last.f3) {
+				int cmp = r.f3.compareTo(last.f3);
+				if (cmp < 0) {
 					// ok, count is descending
-				} else if (r.f3 == last.f3) {
+				} else if (cmp == 0) {
 					// count is the same
-					int cmp = r.f0.compareTo(last.f0);
+					cmp = r.f0.compareTo(last.f0);
 					if (cmp > 0) {
 						// ok, brand is ascending
 					} else if (cmp == 0) {
@@ -270,9 +271,10 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 							// ok, type is ascending
 						} else if (cmp == 0) {
 							// type is the same
-							if (r.f2 > last.f2) {
+							cmp = r.f2.compareTo(last.f2);
+							if (cmp > 0) {
 								// ok, size is ascending
-							} else if (r.f2 == last.f2) {
+							} else if (cmp == 0) {
 								System.out
 										.println("Record "
 												+ i
