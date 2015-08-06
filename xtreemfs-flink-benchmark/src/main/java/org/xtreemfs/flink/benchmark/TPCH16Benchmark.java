@@ -246,12 +246,14 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 
 				// you have to trust me on the negative comment constraint ...
 
-				for (int size : sizes) {
-					if (r.f2.equals(size)) {
-						System.out.println("Record " + i
-								+ " has invalid size: " + r.f2);
-						ok = false;
-					}
+				boolean sizeOk = false;
+				for (int j = 0; j < sizes.length && !sizeOk; ++j) {
+					sizeOk = r.f2.equals(sizes[j]);
+				}
+				if (!sizeOk) {
+					System.out.println("Record " + i + " has invalid size: "
+							+ r.f2);
+					ok = false;
 				}
 
 				if (r.f3 < last.f3) {
