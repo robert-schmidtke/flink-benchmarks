@@ -1,6 +1,7 @@
 package org.xtreemfs.flink.benchmark;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.functions.FilterFunction;
@@ -223,7 +224,105 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 			env.execute();
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
-			// TODO check result
+			// check all results
+			List<Tuple4<String, String, Integer, Long>> results = result
+					.collect();
+			Tuple4<String, String, Integer, Long> last = new Tuple4<String, String, Integer, Long>(
+					"", "", Integer.MIN_VALUE, Long.MAX_VALUE);
+			long i = 0;
+			boolean ok = true;
+			for (Tuple4<String, String, Integer, Long> r : results) {
+				if (r.f0.equals(brand)) {
+					System.out.println("Record " + i + " has invalid brand: "
+							+ r.f0);
+					ok = false;
+				}
+
+				if (r.f1.startsWith(type)) {
+					System.out.println("Record " + i + " has invalid type: "
+							+ r.f1);
+					ok = false;
+				}
+
+				// you have to trust me on the negative comment constraint ...
+
+				for (int size : sizes) {
+					if (r.f2.equals(size)) {
+						System.out.println("Record " + i
+								+ " has invalid size: " + r.f2);
+						ok = false;
+					}
+				}
+
+				if (r.f3 < last.f3) {
+					// ok, count is descending
+				} else if (r.f3 == last.f3) {
+					// count is the same
+					int cmp = r.f0.compareTo(last.f0);
+					if (cmp > 0) {
+						// ok, brand is ascending
+					} else if (cmp == 0) {
+						// brand is the same
+						cmp = r.f1.compareTo(last.f1);
+						if (cmp > 0) {
+							// ok, type is ascending
+						} else if (cmp == 0) {
+							// type is the same
+							if (r.f2 > last.f2) {
+								// ok, size is ascending
+							} else if (r.f2 == last.f2) {
+								System.out
+										.println("Record "
+												+ i
+												+ " ("
+												+ r.toString()
+												+ ") is identical to previous record. Should not happen. Previous record: "
+												+ last);
+								ok = false;
+							} else {
+								System.out
+										.println("Record "
+												+ i
+												+ " ("
+												+ r.toString()
+												+ ") is out of order (size). Previous record: "
+												+ last);
+								ok = false;
+							}
+						} else {
+							System.out
+									.println("Record "
+											+ i
+											+ " ("
+											+ r.toString()
+											+ ") is out of order (type). Previous record: "
+											+ last);
+							ok = false;
+						}
+					} else {
+						System.out
+								.println("Record "
+										+ i
+										+ " ("
+										+ r.toString()
+										+ ") is out of order (brand). Previous record: "
+										+ last);
+						ok = false;
+					}
+				} else {
+					System.out.println("Record " + i + " (" + r.toString()
+							+ ") is out of order (count). Previous record: "
+							+ last);
+					ok = false;
+				}
+
+				last = r;
+				++i;
+			}
+
+			if (ok) {
+				System.out.println("All records were ok.");
+			}
 
 			copyFilesMillis -= System.currentTimeMillis();
 			fileSizes += copyFromWorkingDirectory(
