@@ -1,6 +1,7 @@
 package org.xtreemfs.flink.benchmark;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -12,7 +13,6 @@ import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
-import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.tuple.Tuple10;
 import org.apache.flink.api.java.tuple.Tuple7;
 import org.apache.flink.api.java.tuple.Tuple8;
@@ -59,10 +59,6 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			parameters.setBoolean(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG,
 					flinkAssignLocallyOnly);
 
-			CsvReader reader = env.readCsvFile(
-					dfsWorkingDirectoryUri + "lineitem.tbl")
-					.fieldDelimiter("|");
-
 			// 11111110000 in binary, indicate to skip the first four fields and
 			// include the following seven fields.
 			// 4: l_quantity, decimal
@@ -72,7 +68,20 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			// 8: l_returnflag, 1-char string
 			// 9: l_linestatus, 1-char string
 			// 10: l_shipdate, date
-			reader.includeFields(0x7F0);
+			List<CsvReader> readers = new ArrayList<CsvReader>();
+			if (inputChunks == 0) {
+				readers.add(env
+						.readCsvFile(dfsWorkingDirectoryUri + "lineitem.tbl")
+						.fieldDelimiter("|").includeFields(0x7F0));
+			} else {
+				for (int i = 0; i < inputChunks; ++i) {
+					readers.add(env
+							.readCsvFile(
+									dfsWorkingDirectoryUri + "lineitem.tbl."
+											+ i).fieldDelimiter("|")
+							.includeFields(0x7F0));
+				}
+			}
 
 			final SimpleDateFormat dateParser = new SimpleDateFormat(
 					"yyyy-MM-dd");
@@ -83,10 +92,18 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			final long delta = 90 * 86400000; // (new Random().nextInt(61) + 60)
 												// * 86400000;
 
-			DataSource<Tuple7<Float, Float, Float, Float, String, String, String>> lineItems = reader
+			DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> lineItems = readers
+					.get(0)
 					.types(Float.class, Float.class, Float.class, Float.class,
 							String.class, String.class, String.class)
 					.withParameters(parameters);
+			for (int i = 1; i < inputChunks; ++i) {
+				lineItems = lineItems.union(readers
+						.get(i)
+						.types(Float.class, Float.class, Float.class,
+								Float.class, String.class, String.class,
+								String.class).withParameters(parameters));
+			}
 
 			// Filter on date.
 			DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems

@@ -1,5 +1,6 @@
 package org.xtreemfs.flink.benchmark;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.flink.api.common.JobExecutionResult;
@@ -10,7 +11,6 @@ import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
-import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.configuration.Configuration;
@@ -34,38 +34,72 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 			parameters.setBoolean(FileInputFormat.ASSIGN_LOCALLY_ONLY_FLAG,
 					flinkAssignLocallyOnly);
 
-			// Include first field, skip next two fields, include next three
-			// fields (111001 in binary).
-			// 0: p_partkey, identifier
-			// 3: p_brand, 10-char string (fixed)
-			// 4: p_type, 25-char string (variable)
-			// 5: p_size, integer
-			CsvReader partReader = env
-					.readCsvFile(dfsWorkingDirectoryUri + "part.tbl")
-					.fieldDelimiter("|").includeFields(0x39);
+			List<CsvReader> partReaders = new ArrayList<CsvReader>();
+			List<CsvReader> partSuppReaders = new ArrayList<CsvReader>();
+			List<CsvReader> supplierReaders = new ArrayList<CsvReader>();
+			if (inputChunks == 0) {
+				// Include first field, skip next two fields, include next three
+				// fields (111001 in binary).
+				// 0: p_partkey, identifier
+				// 3: p_brand, 10-char string (fixed)
+				// 4: p_type, 25-char string (variable)
+				// 5: p_size, integer
+				partReaders.add(env
+						.readCsvFile(dfsWorkingDirectoryUri + "part.tbl")
+						.fieldDelimiter("|").includeFields(0x39));
 
-			// Include first two fields (11 in binary).
-			// 0: ps_partkey, identifier (foreign key to p_partkey)
-			// 1: ps_suppkey, identifier (foreign key to s_suppkey)
-			CsvReader partSuppReader = env
-					.readCsvFile(dfsWorkingDirectoryUri + "partsupp.tbl")
-					.fieldDelimiter("|").includeFields(0x2);
+				// Include first two fields (11 in binary).
+				// 0: ps_partkey, identifier (foreign key to p_partkey)
+				// 1: ps_suppkey, identifier (foreign key to s_suppkey)
+				partSuppReaders.add(env
+						.readCsvFile(dfsWorkingDirectoryUri + "partsupp.tbl")
+						.fieldDelimiter("|").includeFields(0x2));
 
-			// Include first field, skip next five fields, include next field
-			// (1000001 in binary).
-			// 0: s_suppkey, identifier
-			// 6: s_comment, 101-char string (variable)
-			CsvReader supplierReader = env
-					.readCsvFile(dfsWorkingDirectoryUri + "supplier.tbl")
-					.fieldDelimiter("|").includeFields(0x41);
+				// Include first field, skip next five fields, include next
+				// field
+				// (1000001 in binary).
+				// 0: s_suppkey, identifier
+				// 6: s_comment, 101-char string (variable)
+				supplierReaders.add(env
+						.readCsvFile(dfsWorkingDirectoryUri + "supplier.tbl")
+						.fieldDelimiter("|").includeFields(0x41));
+			} else {
+				for (int i = 0; i < inputChunks; ++i) {
+					partReaders.add(env
+							.readCsvFile(
+									dfsWorkingDirectoryUri + "part.tbl." + i
+											+ i).fieldDelimiter("|")
+							.includeFields(0x39));
 
-			DataSource<Tuple4<Integer, String, String, Integer>> parts = partReader
-					.types(Integer.class, String.class, String.class,
+					partSuppReaders.add(env
+							.readCsvFile(
+									dfsWorkingDirectoryUri + "partsupp.tbl."
+											+ i).fieldDelimiter("|")
+							.includeFields(0x2));
+
+					supplierReaders.add(env
+							.readCsvFile(
+									dfsWorkingDirectoryUri + "supplier.tbl."
+											+ i).fieldDelimiter("|")
+							.includeFields(0x41));
+				}
+			}
+
+			DataSet<Tuple4<Integer, String, String, Integer>> parts = partReaders
+					.get(0).types(Integer.class, String.class, String.class,
 							Integer.class);
-			DataSource<Tuple2<Integer, Integer>> partSupps = partSuppReader
-					.types(Integer.class, Integer.class);
-			DataSource<Tuple2<Integer, String>> suppliers = supplierReader
+			DataSet<Tuple2<Integer, Integer>> partSupps = partSuppReaders
+					.get(0).types(Integer.class, Integer.class);
+			DataSet<Tuple2<Integer, String>> suppliers = supplierReaders.get(0)
 					.types(Integer.class, String.class);
+			for (int i = 1; i < inputChunks; ++i) {
+				parts = parts.union(partReaders.get(i).types(Integer.class,
+						String.class, String.class, Integer.class));
+				partSupps = partSupps.union(partSuppReaders.get(i).types(
+						Integer.class, Integer.class));
+				suppliers = suppliers.union(supplierReaders.get(i).types(
+						Integer.class, String.class));
+			}
 
 			// select
 			// p_brand, p_type, p_size, count(distinct ps_suppkey) as

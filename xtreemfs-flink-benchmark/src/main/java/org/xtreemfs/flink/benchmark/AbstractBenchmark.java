@@ -27,6 +27,8 @@ public abstract class AbstractBenchmark {
 	protected String dfsWorkingDirectoryUri;
 	private static final String OPTION_FLINK_ASSIGN_LOCALLY_ONLY = "flink-assign-locally-only";
 	protected boolean flinkAssignLocallyOnly;
+	private static final String OPTION_INPUT_CHUNKS = "input-chunks";
+	protected int inputChunks;
 	private static final String OPTION_NO_JOB = "no-job";
 	protected boolean noJob;
 	protected static final String OPTION_OUTPUT_DIRECTORY_PATH = "output-directory-path";
@@ -135,6 +137,24 @@ public abstract class AbstractBenchmark {
 
 		flinkAssignLocallyOnly = cmd
 				.hasOption(OPTION_FLINK_ASSIGN_LOCALLY_ONLY);
+
+		if (!cmd.hasOption(OPTION_INPUT_CHUNKS)) {
+			inputChunks = 0;
+		} else {
+			try {
+				inputChunks = Integer.parseInt(cmd
+						.getOptionValue(OPTION_INPUT_CHUNKS));
+				if (inputChunks < 0) {
+					throw new IllegalArgumentException("--"
+							+ OPTION_INPUT_CHUNKS + " must be positive");
+				}
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Bad argument for --"
+						+ OPTION_INPUT_CHUNKS + ": "
+						+ cmd.getOptionValue(OPTION_INPUT_CHUNKS));
+			}
+		}
+
 		noJob = cmd.hasOption(OPTION_NO_JOB);
 
 		if (!cmd.hasOption(OPTION_OUTPUT_DIRECTORY_PATH)) {
@@ -156,6 +176,13 @@ public abstract class AbstractBenchmark {
 		options.addOption(new Option(null, OPTION_FLINK_ASSIGN_LOCALLY_ONLY,
 				false,
 				"Specify if only local splits should be assigned. Disabled by default."));
+		options.addOption(new Option(
+				null,
+				OPTION_INPUT_CHUNKS,
+				true,
+				"Number of chunks the input file is split into. "
+						+ "If larger than 0, a file extension for each split of <FILENAME>.<N> is assumed "
+						+ "where <N> is the zero-based (incrementing in steps of one) index of each input chunk. Defaults to 0."));
 		options.addOption(new Option(null, OPTION_NO_JOB, false,
 				"Specify if no job should be executed. Disabled by default."));
 		options.addOption(new Option(null, OPTION_OUTPUT_DIRECTORY_PATH, true,
