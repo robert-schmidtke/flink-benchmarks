@@ -1,6 +1,5 @@
 package org.xtreemfs.flink.benchmark;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -20,35 +19,11 @@ import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.FileSystem.WriteMode;
 
-public class TPCH1Benchmark extends AbstractTPCHBenchmark {
+public class TPCH1Benchmark extends AbstractBenchmark {
 
 	@Override
 	public void execute() {
-		long dbgenMillis = System.currentTimeMillis();
-		try {
-			dbgen();
-			dbgenMillis = System.currentTimeMillis() - dbgenMillis;
-		} catch (Throwable t) {
-			throw new RuntimeException("Error during DBgen: " + t.getMessage(),
-					t);
-		}
-
-		long copyFilesMillis = System.currentTimeMillis();
-		long fileSizes;
-		try {
-			fileSizes = copyToWorkingDirectory(dbgenExecutable.getParentFile()
-					.getAbsolutePath(), "lineitem.tbl");
-			copyFilesMillis = System.currentTimeMillis() - copyFilesMillis;
-		} catch (IOException e) {
-			throw new RuntimeException("Error during file copy: "
-					+ e.getMessage(), e);
-		}
-
 		if (noJob) {
-			long deleteFilesMillis = cleanup();
-			System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
-					+ copyFilesMillis + "ms, deleteFiles: " + deleteFilesMillis
-					+ "ms, fileSizes: " + fileSizes);
 			return;
 		}
 
@@ -180,10 +155,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 			result.print();
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
-			copyFilesMillis -= System.currentTimeMillis();
-			fileSizes += copyFromWorkingDirectory(
-					outputDirectory.getAbsolutePath(), "tpchq1.csv");
-			copyFilesMillis += System.currentTimeMillis();
+			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
+					"tpchq1.csv");
 
 			// Output according to dbgen (factor 1.0):
 			// l|l|sum_qty|sum_base_price|sum_disc_price|sum_charge|avg_qty|avg_price|avg_disc|count_order
@@ -216,23 +189,8 @@ public class TPCH1Benchmark extends AbstractTPCHBenchmark {
 					+ e.getMessage(), e);
 		}
 
-		long deleteFilesMillis = cleanup();
-		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
-				+ copyFilesMillis + "ms, job (wall): " + jobMillis
-				+ "ms, job (flink): " + jobExecResult.getNetRuntime()
-				+ "ms deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
-				+ fileSizes);
-	}
-
-	private long cleanup() {
-		long deleteFilesMillis = System.currentTimeMillis();
-		try {
-			deleteFromWorkingDirectory("lineitem.tbl");
-		} catch (IOException e) {
-			throw new RuntimeException("Error during file remove: "
-					+ e.getMessage(), e);
-		}
-		return System.currentTimeMillis() - deleteFilesMillis;
+		System.out.println("job (wall): " + jobMillis + "ms, job (flink): "
+				+ jobExecResult.getNetRuntime() + "ms");
 	}
 
 	private static void checkResult(

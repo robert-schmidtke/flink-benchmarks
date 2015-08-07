@@ -1,6 +1,5 @@
 package org.xtreemfs.flink.benchmark;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.flink.api.common.JobExecutionResult;
@@ -17,36 +16,11 @@ import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.FileSystem.WriteMode;
 
-public class TPCH16Benchmark extends AbstractTPCHBenchmark {
+public class TPCH16Benchmark extends AbstractBenchmark {
 
 	@Override
 	public void execute() {
-		long dbgenMillis = System.currentTimeMillis();
-		try {
-			dbgen();
-			dbgenMillis = System.currentTimeMillis() - dbgenMillis;
-		} catch (Throwable t) {
-			throw new RuntimeException("Error during DBgen: " + t.getMessage(),
-					t);
-		}
-
-		long copyFilesMillis = System.currentTimeMillis();
-		long fileSizes;
-		try {
-			fileSizes = copyToWorkingDirectory(dbgenExecutable.getParentFile()
-					.getAbsolutePath(), "part.tbl", "partsupp.tbl",
-					"supplier.tbl");
-			copyFilesMillis = System.currentTimeMillis() - copyFilesMillis;
-		} catch (IOException e) {
-			throw new RuntimeException("Error during file copy: "
-					+ e.getMessage(), e);
-		}
-
 		if (noJob) {
-			long deleteFilesMillis = cleanup();
-			System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
-					+ copyFilesMillis + "ms, deleteFiles: " + deleteFilesMillis
-					+ "ms, fileSizes: " + fileSizes);
 			return;
 		}
 
@@ -328,10 +302,8 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 				System.out.println("All records were ok.");
 			}
 
-			copyFilesMillis -= System.currentTimeMillis();
-			fileSizes += copyFromWorkingDirectory(
-					outputDirectory.getAbsolutePath(), "tpchq16.csv");
-			copyFilesMillis += System.currentTimeMillis();
+			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
+					"tpchq16.csv");
 
 			jobExecResult = env.getLastJobExecutionResult();
 		} catch (Exception e) {
@@ -339,24 +311,8 @@ public class TPCH16Benchmark extends AbstractTPCHBenchmark {
 					+ e.getMessage(), e);
 		}
 
-		long deleteFilesMillis = cleanup();
-		System.out.println("dbgen: " + dbgenMillis + "ms, copyFiles: "
-				+ copyFilesMillis + "ms, job (wall): " + jobMillis
-				+ "ms, job (flink): " + jobExecResult.getNetRuntime()
-				+ "ms deleteFiles: " + deleteFilesMillis + "ms, fileSizes: "
-				+ fileSizes);
-	}
-
-	private long cleanup() {
-		long deleteFilesMillis = System.currentTimeMillis();
-		try {
-			deleteFromWorkingDirectory("part.tbl", "partsupp.tbl",
-					"supplier.tbl");
-		} catch (IOException e) {
-			throw new RuntimeException("Error during file remove: "
-					+ e.getMessage(), e);
-		}
-		return System.currentTimeMillis() - deleteFilesMillis;
+		System.out.println("job (wall): " + jobMillis + "ms, job (flink): "
+				+ jobExecResult.getNetRuntime() + "ms");
 	}
 
 	@Override
