@@ -99,6 +99,7 @@ public class XtreemFSFlinkBenchmark {
 			System.exit(1);
 		} catch (Throwable t) {
 			System.err.println("Other error: " + t.getMessage() + ".\n");
+			t.printStackTrace();
 			System.exit(1);
 		}
 	}
