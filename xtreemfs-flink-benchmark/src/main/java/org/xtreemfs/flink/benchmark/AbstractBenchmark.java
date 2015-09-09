@@ -27,8 +27,12 @@ public abstract class AbstractBenchmark {
 	protected String dfsWorkingDirectoryUri;
 	private static final String OPTION_FLINK_ASSIGN_LOCALLY_ONLY = "flink-assign-locally-only";
 	protected boolean flinkAssignLocallyOnly;
+	private static final String OPTION_INPUT_CHUNKS = "input-chunks";
+	protected int inputChunks;
 	private static final String OPTION_NO_JOB = "no-job";
 	protected boolean noJob;
+	protected static final String OPTION_OUTPUT_DIRECTORY_PATH = "output-directory-path";
+	protected File outputDirectory;
 
 	// Options needed when using HDFS.
 	private static final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
@@ -133,7 +137,36 @@ public abstract class AbstractBenchmark {
 
 		flinkAssignLocallyOnly = cmd
 				.hasOption(OPTION_FLINK_ASSIGN_LOCALLY_ONLY);
+
+		if (!cmd.hasOption(OPTION_INPUT_CHUNKS)) {
+			inputChunks = 0;
+		} else {
+			try {
+				inputChunks = Integer.parseInt(cmd
+						.getOptionValue(OPTION_INPUT_CHUNKS));
+				if (inputChunks < 0) {
+					throw new IllegalArgumentException("--"
+							+ OPTION_INPUT_CHUNKS + " must be positive");
+				}
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Bad argument for --"
+						+ OPTION_INPUT_CHUNKS + ": "
+						+ cmd.getOptionValue(OPTION_INPUT_CHUNKS));
+			}
+		}
+
 		noJob = cmd.hasOption(OPTION_NO_JOB);
+
+		if (!cmd.hasOption(OPTION_OUTPUT_DIRECTORY_PATH)) {
+			throw new IllegalArgumentException("Missing required arguments --"
+					+ OPTION_OUTPUT_DIRECTORY_PATH);
+		}
+		outputDirectory = new File(
+				cmd.getOptionValue(OPTION_OUTPUT_DIRECTORY_PATH));
+		if (!outputDirectory.exists()) {
+			throw new IllegalArgumentException("Output directory "
+					+ outputDirectory.getPath() + " does not exist");
+		}
 	}
 
 	public void getOptions(Options options) {
@@ -143,8 +176,17 @@ public abstract class AbstractBenchmark {
 		options.addOption(new Option(null, OPTION_FLINK_ASSIGN_LOCALLY_ONLY,
 				false,
 				"Specify if only local splits should be assigned. Disabled by default."));
+		options.addOption(new Option(
+				null,
+				OPTION_INPUT_CHUNKS,
+				true,
+				"Number of chunks the input file is split into. "
+						+ "If larger than 0, a file extension for each split of <FILENAME>.<N> is assumed "
+						+ "where <N> is the zero-based (incrementing in steps of one) index of each input chunk. Defaults to 0."));
 		options.addOption(new Option(null, OPTION_NO_JOB, false,
 				"Specify if no job should be executed. Disabled by default."));
+		options.addOption(new Option(null, OPTION_OUTPUT_DIRECTORY_PATH, true,
+				"Path of the output directory where results are placed."));
 
 		options.addOption(new Option(
 				null,
@@ -209,6 +251,55 @@ public abstract class AbstractBenchmark {
 		case XTREEMFS:
 			fileSizes = BenchmarkUtil.copyFiles(fromDir,
 					xtreemfsWorkingDirectory.getAbsolutePath(), files);
+		}
+		return fileSizes;
+	}
+
+	protected long copyFromWorkingDirectory(String toDir, String... files)
+			throws IOException {
+		long fileSizes = 0L;
+		switch (dfsType) {
+		case HDFS:
+			if (!toDir.endsWith(File.separator)) {
+				toDir += File.separator;
+			}
+
+			List<String> hadoopCommand = new ArrayList<String>();
+			hadoopCommand.add(hdfsHadoopExecutable.getAbsolutePath());
+			hadoopCommand.add("fs");
+			hadoopCommand.add("-copyToLocal");
+			hadoopCommand.add("");
+			hadoopCommand.add(toDir);
+			for (String file : files) {
+				hadoopCommand.set(3, dfsWorkingDirectoryUri + file);
+				Process hadoop = new ProcessBuilder(hadoopCommand).start();
+				BufferedReader errorReader = new BufferedReader(
+						new InputStreamReader(hadoop.getErrorStream()));
+				StringBuilder errors = new StringBuilder();
+				String line;
+				while ((line = errorReader.readLine()) != null) {
+					errors.append(line);
+				}
+				errorReader.close();
+
+				try {
+					if (hadoop.waitFor() != 0) {
+						throw new RuntimeException(
+								"Non-zero Hadoop exit status, stderr:\n"
+										+ errors.toString());
+					}
+				} catch (InterruptedException e) {
+					throw new RuntimeException(
+							"Error during Hadoop copyToLocal: "
+									+ e.getMessage(), e);
+				}
+				fileSizes += new File(toDir + file).length();
+			}
+			break;
+		case XTREEMFS:
+			BenchmarkUtil.copyFiles(xtreemfsWorkingDirectory.getAbsolutePath(),
+					toDir, files);
+			break;
 		}
 		return fileSizes;
 	}
