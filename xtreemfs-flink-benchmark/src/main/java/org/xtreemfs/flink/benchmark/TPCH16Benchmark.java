@@ -80,19 +80,26 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 			}
 
 			DataSet<Tuple4<Integer, String, String, Integer>> parts = partReaders
-					.get(0).types(Integer.class, String.class, String.class,
-							Integer.class);
+					.get(0)
+					.types(Integer.class, String.class, String.class,
+							Integer.class).withParameters(parameters);
 			DataSet<Tuple2<Integer, Integer>> partSupps = partSuppReaders
-					.get(0).types(Integer.class, Integer.class);
+					.get(0).types(Integer.class, Integer.class)
+					.withParameters(parameters);
 			DataSet<Tuple2<Integer, String>> suppliers = supplierReaders.get(0)
-					.types(Integer.class, String.class);
+					.types(Integer.class, String.class)
+					.withParameters(parameters);
 			for (int i = 1; i < inputChunks; ++i) {
-				parts = parts.union(partReaders.get(i).types(Integer.class,
-						String.class, String.class, Integer.class));
-				partSupps = partSupps.union(partSuppReaders.get(i).types(
-						Integer.class, Integer.class));
-				suppliers = suppliers.union(supplierReaders.get(i).types(
-						Integer.class, String.class));
+				parts = parts.union(partReaders
+						.get(i)
+						.types(Integer.class, String.class, String.class,
+								Integer.class).withParameters(parameters));
+				partSupps = partSupps.union(partSuppReaders.get(i)
+						.types(Integer.class, Integer.class)
+						.withParameters(parameters));
+				suppliers = suppliers.union(supplierReaders.get(i)
+						.types(Integer.class, String.class)
+						.withParameters(parameters));
 			}
 
 			// select
