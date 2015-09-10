@@ -12,6 +12,7 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.io.CsvReader;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.FileSystem.WriteMode;
 
 public class TPCH16Benchmark extends AbstractBenchmark {
@@ -27,6 +28,8 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 		try {
 			ExecutionEnvironment env = ExecutionEnvironment
 					.getExecutionEnvironment();
+			
+			Configuration parameters = new Configuration();
 
 			List<CsvReader> partReaders = new ArrayList<CsvReader>();
 			List<CsvReader> partSuppReaders = new ArrayList<CsvReader>();
