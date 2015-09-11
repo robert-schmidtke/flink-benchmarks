@@ -163,6 +163,7 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 
 			lineItems.writeAsCsv(dfsWorkingDirectoryUri + "tpchq1.csv", "\n", "|",
 					WriteMode.OVERWRITE);
+			env.execute();
 
 			// print triggers program execution
 			/* jobMillis = System.currentTimeMillis();
