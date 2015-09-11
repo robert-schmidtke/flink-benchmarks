@@ -103,7 +103,7 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			}
 
 			// Filter on date.
-			/* DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems
+			DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems
 					.filter(new FilterFunction<Tuple7<Float, Float, Float, Float, String, String, String>>() {
 
 						private static final long serialVersionUID = -818134663949093125L;
@@ -118,7 +118,7 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 					});
 
 			// Map for calculations.
-			DataSet<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> mappedLineItems = filteredLineItems
+			/* DataSet<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> mappedLineItems = filteredLineItems
 					.map(new MapFunction<Tuple7<Float, Float, Float, Float, String, String, String>, Tuple8<String, String, Float, Float, Float, Float, Float, Long>>() {
 
 						private static final long serialVersionUID = 8021849053433646399L;
@@ -166,7 +166,7 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 
 			// print triggers program execution
 			jobMillis = System.currentTimeMillis();
-			lineItems.print();
+			filteredLineItems.print();
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
 			/* copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
