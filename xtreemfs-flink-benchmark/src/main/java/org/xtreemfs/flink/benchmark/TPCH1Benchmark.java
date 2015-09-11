@@ -103,7 +103,7 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			}
 
 			// Filter on date.
-			DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems
+			/* DataSet<Tuple7<Float, Float, Float, Float, String, String, String>> filteredLineItems = lineItems
 					.filter(new FilterFunction<Tuple7<Float, Float, Float, Float, String, String, String>>() {
 
 						private static final long serialVersionUID = -818134663949093125L;
@@ -118,7 +118,7 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 					});
 
 			// Map for calculations.
-			/* DataSet<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> mappedLineItems = filteredLineItems
+			DataSet<Tuple8<String, String, Float, Float, Float, Float, Float, Long>> mappedLineItems = filteredLineItems
 					.map(new MapFunction<Tuple7<Float, Float, Float, Float, String, String, String>, Tuple8<String, String, Float, Float, Float, Float, Float, Long>>() {
 
 						private static final long serialVersionUID = 8021849053433646399L;
@@ -159,18 +159,18 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 									tuple.f7);
 						}
 					}).sortPartition(0, Order.ASCENDING).setParallelism(1)
-					.sortPartition(1, Order.ASCENDING).setParallelism(1);
+					.sortPartition(1, Order.ASCENDING).setParallelism(1); */
 
-			result.writeAsCsv(dfsWorkingDirectoryUri + "tpchq1.csv", "\n", "|",
-					WriteMode.OVERWRITE); */
+			lineItems.writeAsCsv(dfsWorkingDirectoryUri + "tpchq1.csv", "\n", "|",
+					WriteMode.OVERWRITE);
 
 			// print triggers program execution
-			jobMillis = System.currentTimeMillis();
-			filteredLineItems.print();
-			jobMillis = System.currentTimeMillis() - jobMillis;
+			/* jobMillis = System.currentTimeMillis();
+			result.print();
+			jobMillis = System.currentTimeMillis() - jobMillis; */
 
-			/* copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
-					"tpchq1.csv"); */
+			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
+					"tpchq1.csv");
 
 			// Output according to dbgen (factor 1.0):
 			// l|l|sum_qty|sum_base_price|sum_disc_price|sum_charge|avg_qty|avg_price|avg_disc|count_order
