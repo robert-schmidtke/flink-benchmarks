@@ -25,6 +25,8 @@ public class XtreemFSFlinkBenchmark {
 
 		AbstractBenchmark tpch1 = new TPCH1Benchmark();
 		benchmarks.put(tpch1.getName(), tpch1);
+		AbstractBenchmark tpch2 = new TPCH2Benchmark();
+		benchmarks.put(tpch2.getName(), tpch2);
 		AbstractBenchmark tpch16 = new TPCH16Benchmark();
 		benchmarks.put(tpch16.getName(), tpch16);
 
