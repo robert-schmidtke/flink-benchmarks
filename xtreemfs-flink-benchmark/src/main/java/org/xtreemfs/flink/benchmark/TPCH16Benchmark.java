@@ -28,7 +28,7 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 		try {
 			ExecutionEnvironment env = ExecutionEnvironment
 					.getExecutionEnvironment();
-			
+
 			Configuration parameters = new Configuration();
 
 			List<CsvReader> partReaders = new ArrayList<CsvReader>();
@@ -64,9 +64,8 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 				for (int i = 0; i < inputChunks; ++i) {
 					partReaders.add(env
 							.readCsvFile(
-									dfsWorkingDirectoryUri + "part.tbl." + i
-											+ i).fieldDelimiter("|")
-							.includeFields(0x39));
+									dfsWorkingDirectoryUri + "part.tbl." + i)
+							.fieldDelimiter("|").includeFields(0x39));
 
 					partSuppReaders.add(env
 							.readCsvFile(
