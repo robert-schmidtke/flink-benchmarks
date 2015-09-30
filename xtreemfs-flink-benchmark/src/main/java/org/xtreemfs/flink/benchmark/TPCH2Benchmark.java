@@ -63,7 +63,7 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 				// 1: ps_suppkey, identifier
 				// 3: ps_supplycost, floating point
 				partSuppReaders.add(env
-						.readCsvFile(dfsWorkingDirectoryUri + "partSupp.tbl")
+						.readCsvFile(dfsWorkingDirectoryUri + "partsupp.tbl")
 						.fieldDelimiter("|").includeFields(0x13));
 			} else {
 				for (int i = 0; i < inputChunks; ++i) {
@@ -80,7 +80,7 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 
 					partSuppReaders.add(env
 							.readCsvFile(
-									dfsWorkingDirectoryUri + "partSupp.tbl."
+									dfsWorkingDirectoryUri + "partsupp.tbl."
 											+ i).fieldDelimiter("|")
 							.includeFields(0x13));
 				}
