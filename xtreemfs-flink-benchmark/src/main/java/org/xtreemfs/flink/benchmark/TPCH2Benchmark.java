@@ -42,9 +42,10 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 				// 2: p_mfgr, 25-char string (fixed)
 				// 4: p_type, 25-char string (fixed)
 				// 5: p_size, integer
+				// 110101
 				partReaders.add(env
 						.readCsvFile(dfsWorkingDirectoryUri + "part.tbl")
-						.fieldDelimiter("|").includeFields(0x43));
+						.fieldDelimiter("|").includeFields(0x35));
 
 				// include all fields
 				// 0: s_suppkey, identifier
@@ -54,35 +55,37 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 				// 4: s_phone, 15-char string (fixed)
 				// 5: s_acctbal, floating point
 				// 6: s_comment, 101-char string (variable)
+				// 1111111
 				supplierReaders.add(env
 						.readCsvFile(dfsWorkingDirectoryUri + "supplier.tbl")
-						.fieldDelimiter("|").includeFields(0x127));
+						.fieldDelimiter("|").includeFields(0x7F));
 
 				// include the following fields
 				// 0: ps_partkey, identifier
 				// 1: ps_suppkey, identifier
 				// 3: ps_supplycost, floating point
+				// 1011
 				partSuppReaders.add(env
 						.readCsvFile(dfsWorkingDirectoryUri + "partsupp.tbl")
-						.fieldDelimiter("|").includeFields(0x13));
+						.fieldDelimiter("|").includeFields(0xB));
 			} else {
 				for (int i = 0; i < inputChunks; ++i) {
 					partReaders.add(env
 							.readCsvFile(
 									dfsWorkingDirectoryUri + "part.tbl." + i)
-							.fieldDelimiter("|").includeFields(0x43));
+							.fieldDelimiter("|").includeFields(0x35));
 
 					supplierReaders.add(env
 							.readCsvFile(
 									dfsWorkingDirectoryUri + "supplier.tbl."
 											+ i).fieldDelimiter("|")
-							.includeFields(0x127));
+							.includeFields(0x7F));
 
 					partSuppReaders.add(env
 							.readCsvFile(
 									dfsWorkingDirectoryUri + "partsupp.tbl."
 											+ i).fieldDelimiter("|")
-							.includeFields(0x13));
+							.includeFields(0xB));
 				}
 			}
 
@@ -90,6 +93,7 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 			// 0: n_nationkey, identifier
 			// 1: n_name, 25-char string (fixed)
 			// 2: n_regionkey, identifier
+			// 111
 			CsvReader nationReader = env
 					.readCsvFile(dfsWorkingDirectoryUri + "nation.tbl")
 					.fieldDelimiter("|").includeFields(0x7);
@@ -97,6 +101,7 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 			// include first two fields.
 			// 0: r_regionkey, identifier
 			// 1: r_name, 25-char string (fixed)
+			// 11
 			CsvReader regionReader = env
 					.readCsvFile(dfsWorkingDirectoryUri + "region.tbl")
 					.fieldDelimiter("|").includeFields(0x3);
