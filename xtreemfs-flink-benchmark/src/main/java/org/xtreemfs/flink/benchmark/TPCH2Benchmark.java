@@ -224,7 +224,7 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 			DataSet<Tuple7<Integer, String, String, Integer, String, Float, String>> filteredSuppliers = suppliers
 					.join(filteredNations)
 					// s_nationkey
-					.where(4)
+					.where(3)
 					// = n_nationkey
 					.equalTo(0)
 					.map(new MapFunction<Tuple2<Tuple7<Integer, String, String, Integer, String, Float, String>, Tuple3<Integer, String, Integer>>, Tuple7<Integer, String, String, Integer, String, Float, String>>() {
