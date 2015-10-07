@@ -279,7 +279,7 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 					"\n", "|", WriteMode.OVERWRITE);
 
 			jobMillis = System.currentTimeMillis();
-			env.execute();
+			env.execute("tpch2");
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
 			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),

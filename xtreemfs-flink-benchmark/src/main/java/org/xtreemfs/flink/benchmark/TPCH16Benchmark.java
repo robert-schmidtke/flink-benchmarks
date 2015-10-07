@@ -232,7 +232,7 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 					"|", WriteMode.OVERWRITE);
 
 			jobMillis = System.currentTimeMillis();
-			env.execute();
+			env.execute("tpch16");
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
 			// check all results
