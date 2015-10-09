@@ -234,6 +234,8 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 			jobMillis = System.currentTimeMillis();
 			env.execute("tpch16");
 			jobMillis = System.currentTimeMillis() - jobMillis;
+			
+			jobExecResult = env.getLastJobExecutionResult();
 
 			// check all results
 			List<Tuple4<String, String, Integer, Long>> results = result
@@ -341,8 +343,6 @@ public class TPCH16Benchmark extends AbstractBenchmark {
 
 			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
 					"tpchq16.csv");
-
-			jobExecResult = env.getLastJobExecutionResult();
 		} catch (Exception e) {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);

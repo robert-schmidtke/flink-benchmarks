@@ -282,10 +282,12 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 			env.execute("tpch2");
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
+			jobExecResult = env.getLastJobExecutionResult();
+
 			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
 					"tpchq2.csv");
-
-			jobExecResult = env.getLastJobExecutionResult();
+			
+			// TODO check results
 		} catch (Exception e) {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);

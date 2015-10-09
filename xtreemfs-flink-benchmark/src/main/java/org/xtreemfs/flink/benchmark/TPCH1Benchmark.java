@@ -169,6 +169,8 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			result.print();
 			jobMillis = System.currentTimeMillis() - jobMillis;
 
+			jobExecResult = env.getLastJobExecutionResult();
+
 			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
 					"tpchq1.csv");
 
@@ -196,8 +198,6 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 				checkResult(results.get(3), "R", "F", 25.51f, 38250.85f, 0.05f,
 						0.002f);
 			}
-
-			jobExecResult = env.getLastJobExecutionResult();
 		} catch (Exception e) {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);
