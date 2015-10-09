@@ -286,8 +286,10 @@ public class TPCH2Benchmark extends AbstractBenchmark {
 
 			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
 					"tpchq2.csv");
-			
-			// TODO check results
+
+			if (verifyResults) {
+				// TODO check results
+			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error during execution: "
 					+ e.getMessage(), e);

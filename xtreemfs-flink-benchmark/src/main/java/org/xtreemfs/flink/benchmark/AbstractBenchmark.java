@@ -33,6 +33,8 @@ public abstract class AbstractBenchmark {
 	protected boolean noJob;
 	protected static final String OPTION_OUTPUT_DIRECTORY_PATH = "output-directory-path";
 	protected File outputDirectory;
+	protected static final String OPTION_VERIFY_RESULTS = "verify-results";
+	protected boolean verifyResults;
 
 	// Options needed when using HDFS.
 	private static final String OPTION_HDFS_BLOCKSIZE = "hdfs-blocksize";
@@ -167,6 +169,8 @@ public abstract class AbstractBenchmark {
 			throw new IllegalArgumentException("Output directory "
 					+ outputDirectory.getPath() + " does not exist");
 		}
+
+		verifyResults = cmd.hasOption(OPTION_VERIFY_RESULTS);
 	}
 
 	public void getOptions(Options options) {
@@ -187,6 +191,8 @@ public abstract class AbstractBenchmark {
 				"Specify if no job should be executed. Disabled by default."));
 		options.addOption(new Option(null, OPTION_OUTPUT_DIRECTORY_PATH, true,
 				"Path of the output directory where results are placed."));
+		options.addOption(new Option(null, OPTION_VERIFY_RESULTS, false,
+				"Specify if the results should be verified. Disabled by default."));
 
 		options.addOption(new Option(
 				null,

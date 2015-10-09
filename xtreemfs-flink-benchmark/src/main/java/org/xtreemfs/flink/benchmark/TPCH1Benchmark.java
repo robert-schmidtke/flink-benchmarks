@@ -174,29 +174,31 @@ public class TPCH1Benchmark extends AbstractBenchmark {
 			copyFromWorkingDirectory(outputDirectory.getAbsolutePath(),
 					"tpchq1.csv");
 
-			// Output according to dbgen (factor 1.0):
-			// l|l|sum_qty|sum_base_price|sum_disc_price|sum_charge|avg_qty|avg_price|avg_disc|count_order
-			// A|F|37734107.00|56586554400.73|53758257134.87|55909065222.83|25.52|38273.13|0.05|1478493
-			// N|F|991417.00|1487504710.38|1413082168.05|1469649223.19|25.52|38284.47|0.05|38854
-			// N|O|74476040.00|111701729697.74|106118230307.61|110367043872.50|25.50|38249.12|0.05|2920374
-			// R|F|37719753.00|56568041380.90|53741292684.60|55889619119.83|25.51|38250.85|0.05|1478870
+			if (verifyResults) {
+				// Output according to dbgen (factor 1.0):
+				// l|l|sum_qty|sum_base_price|sum_disc_price|sum_charge|avg_qty|avg_price|avg_disc|count_order
+				// A|F|37734107.00|56586554400.73|53758257134.87|55909065222.83|25.52|38273.13|0.05|1478493
+				// N|F|991417.00|1487504710.38|1413082168.05|1469649223.19|25.52|38284.47|0.05|38854
+				// N|O|74476040.00|111701729697.74|106118230307.61|110367043872.50|25.50|38249.12|0.05|2920374
+				// R|F|37719753.00|56568041380.90|53741292684.60|55889619119.83|25.51|38250.85|0.05|1478870
 
-			// So we cannot test the sums and counts, but we can check the
-			// averages and the order.
-			List<Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>> results = result
-					.collect();
-			if (results.size() != 4) {
-				System.out.println("Incorrect number of results: "
-						+ results.size() + ", expected 4.");
-			} else {
-				checkResult(results.get(0), "A", "F", 25.52f, 38273.13f, 0.05f,
-						0.002f);
-				checkResult(results.get(1), "N", "F", 25.52f, 38284.47f, 0.05f,
-						0.002f);
-				checkResult(results.get(2), "N", "O", 25.50f, 38249.12f, 0.05f,
-						0.002f);
-				checkResult(results.get(3), "R", "F", 25.51f, 38250.85f, 0.05f,
-						0.002f);
+				// So we cannot test the sums and counts, but we can check the
+				// averages and the order.
+				List<Tuple10<String, String, Float, Float, Float, Float, Float, Float, Float, Long>> results = result
+						.collect();
+				if (results.size() != 4) {
+					System.out.println("Incorrect number of results: "
+							+ results.size() + ", expected 4.");
+				} else {
+					checkResult(results.get(0), "A", "F", 25.52f, 38273.13f,
+							0.05f, 0.002f);
+					checkResult(results.get(1), "N", "F", 25.52f, 38284.47f,
+							0.05f, 0.002f);
+					checkResult(results.get(2), "N", "O", 25.50f, 38249.12f,
+							0.05f, 0.002f);
+					checkResult(results.get(3), "R", "F", 25.51f, 38250.85f,
+							0.05f, 0.002f);
+				}
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Error during execution: "
